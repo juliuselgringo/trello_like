@@ -5,7 +5,7 @@
 <template>
     <main class="text-white h-screen"> 
         <Header />        
-        <div id="layout" class="grid grid-cols-2 mx-20 gap-60">
+        <div id="layout-login" class="grid grid-cols-2 mx-20 gap-60">
             <div id="presentation" class="mt-24 col-span-1">
                 <div id="accroche" class="text-5xl">
                     <p>Organisez.</p>
@@ -52,7 +52,7 @@
 
 <style>
     main{
-        background-image: var(--gradient-main);
+        background-image: var(--main-bg-login);
     }
 
     input {
