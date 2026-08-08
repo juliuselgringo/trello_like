@@ -1,12 +1,12 @@
 <script setup>
-
+    import Header from '../components/Header.vue';
 </script>
 
 <template>
     <main class="text-white h-screen"> 
-        <h1 class="font-bold text-3xl flex items-center p-6"><img class="m-2 h-10 w-10 rounded" id="logo" src="../../img/Capture d'écran 2026-08-07 084620.png">Taskflow</h1>
+        <Header />        
         <div id="layout" class="grid grid-cols-2 mx-20 gap-60">
-            <div class="mt-24 col-span-1" id="presentation">
+            <div id="presentation" class="mt-24 col-span-1">
                 <div id="accroche" class="text-5xl">
                     <p>Organisez.</p>
                     <p class="text-purple-500">Collaborez.</p>
@@ -52,12 +52,11 @@
 
 <style>
     main{
-        background-image: linear-gradient(135deg, purple 10%, black 50%);
-        min-height: 100vh;
+        background-image: var(--gradient-main);
     }
 
     input {
-        background-color: rgb(48, 46, 46);
-        color: white;
+        background-color: var(--input-bg);
+        color: var(--input-color);
     }
 </style>
