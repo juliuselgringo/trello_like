@@ -10,10 +10,10 @@
         <p class="text-gray-500">{{ label }}</p>
         <span 
         :class="{
-            'text-purple-500 text-xl font-bold': label == 'Projet Actifs',
-            'text-yellow-500 text-xl font-bold': label == 'Tâches en cours',
-            'text-green-500 text-xl font-bold': label == 'Terminées ce mois',
-            'text-red-500 text-xl font-bold': label == 'En retard'
+            'text-purple-500 text-4xl font-bold': label == 'Projet Actifs',
+            'text-yellow-500 text-4xl font-bold': label == 'Tâches en cours',
+            'text-green-500 text-4xl font-bold': label == 'Terminées ce mois',
+            'text-red-500 text-4xl font-bold': label == 'En retard'
         }">
             {{ value }}
         </span>

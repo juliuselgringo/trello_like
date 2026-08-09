@@ -8,6 +8,8 @@
     const tasksInProgress = ref(3);
     const tasksCompletedThisMonth = ref(18);
     const tasksOverdue = ref(2);
+
+    // fetch /api/projects
     const projects = ref([
         { project_id: 1, project_name: "Projet 1", project_description: "Description du projet 1", project_creation_date: "01/01/2026" },
         { project_id: 2, project_name: "Trojet 2", project_description: "Description du projet 2", project_creation_date: "15/02/2026" },
@@ -20,6 +22,9 @@
         { project_id: 9, project_name: "Projet 9", project_description: "Description du projet 9", project_creation_date: "30/09/2026" },
         { project_id: 10, project_name: "Projet 10", project_description: "Description du projet 10", project_creation_date: "05/10/2026" },
     ]);
+
+    const projectsFiltered = ref([...projects.value]);
+
     const colors = ref([
         "text-purple-500",
         "text-yellow-500",
@@ -34,6 +39,8 @@
         "bg-red-500",
         "bg-blue-500",
     ]);
+
+    // fetch /api/tasks/project_id/count
     const tasksByProject = ref([
         { project_id: 1, tasks: 5 },
         { project_id: 2, tasks: 3 },
@@ -46,6 +53,8 @@
         { project_id: 9, tasks: 5 },
         { project_id: 10, tasks: 3 },
     ]);
+
+    // fetch /api/tasks/project_id/done/count
     const tasksDoneByProject = ref([
         { project_id: 1, tasks_done: 3 },
         { project_id: 2, tasks_done: 1 },
@@ -86,20 +95,43 @@
         return projectColor;
     };
 
+    const filterProjects = (event) => {
+        const searchTerm = event.target.value.toLowerCase();
+        projectsFiltered.value = projects.value.filter(project => project.project_name.toLowerCase().includes(searchTerm));
+    };
+
 </script>
 
 <template>
     <main class="text-white min-h-screen">
-        <Header />
+        <div id="header-row" class="grid grid-cols-3">
+            <div id="header-col" class="col-span-1">
+                <Header />
+            </div>
+            <div id="search-col" class="col-span-1 items-center flex justify-center">
+                <input class="w-full rounded-md px-4 py-2 text-gray-400 border border-gray-500" 
+                style="background-color: var(--input-bg);" 
+                type="text" placeholder="&#128269; Rechercher..."  
+                @input="filterProjects"
+                />
+            </div>
+            <div id="logout-col" class="col-span-1 flex items-center justify-end px-20">
+                <a href="#" class="text-white">[→ Déconnexion</a>
+            </div>
+        </div>    
         <hr class="mb-10 border-gray-500" />
         <div id="layout-dashboard" class="mx-20">
             <div id="first-row" class="grid grid-cols-2">
                 <div id="greeting-col" class="col-span-1">
                     <!-- date en français (samedi 8 aout 2026)-->
-                    <p id="date">{{ date.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}</p>
+                    <p id="date">
+                        {{ date.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}
+                    </p>
                     <h1 id="greeting" class="text-3xl font-bold">Bonjour, Julien &#128075;</h1>
                     <p id="welcome-message">
-                        Vous avez <span class="text-purple-500">{{ tasksInProgress }} tâches en cours</span> aujourd'hui.
+                        Vous avez 
+                        <span class="text-purple-500">{{ tasksInProgress }} tâches en cours</span>
+                         aujourd'hui.
                     </p>
                 </div>
                 <div class="col-span-1 flex justify-end">
@@ -115,7 +147,7 @@
             <div id="mes_projets" class="mt-10">
                 <p class="text-xl font-bold">Mes Projets</p>
                 <div class="grid grid-cols-3 gap-4">
-                    <div v-for="project in projects" :key="project.project_id" class="border border-gray-500 rounded-md p-4"  style="background-color: var(--input-bg);">
+                    <div v-for="project in projectsFiltered" :key="project.project_id" class="border border-gray-500 rounded-md p-4"  style="background-color: var(--input-bg);">
                         <div :class="[`text-2xl font-bold mb-2 border rounded-md w-fit py-2 px-4`, getProjectColor(project.project_id)]">{{ project.project_name[0] }}</div>
                         <h2 class="text-lg font-bold">{{ project.project_name }}</h2>
                         <p>{{ project.project_description }}</p>
@@ -150,6 +182,6 @@
 
 <style>
     main{
-        background-color: var(--main-bg-dashboard);
+        background-color: var(--main-bg);
     }
 </style>

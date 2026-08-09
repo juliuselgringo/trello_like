@@ -2,8 +2,10 @@
 
 :root{
     --main-bg-login: linear-gradient(135deg, purple 10%, black 50%);
-    --main-bg-dashboard: rgb(40, 40, 40);
+    --main-bg: rgb(40, 40, 40);
+    --column-bg: rgb(50,50,50);
     --input-bg: rgb(60,60,60);
+    
     --input-color: white;
 
 }
