@@ -1,8 +1,46 @@
 <script setup>
+    import DeconnexionBtn from '../components/DeconnexionBtn.vue';
     import Header from '../components/Header.vue';
     import OverviewCards from '../components/OverviewCards.vue';
+    import ModalProject from '../components/ModalProject.vue';
+    
     import { ref } from 'vue';
 
+    // modal project
+    const showModalProject = ref(false);
+    const modalMode = ref('add');
+    const selectedProject = ref(null);
+
+    const openAddProjectModal = () => {
+        modalMode.value = 'add';
+        selectedProject.value = null;
+        showModalProject.value = true;
+    };
+
+    const openEditProjectModal = (project) => {
+        modalMode.value = 'edit';
+        selectedProject.value = project;
+        showModalProject.value = true;
+    };
+
+    const closeModal = () => {
+        showModalProject.value = false;
+    };
+
+    const handleProjectCreate = (newProject) => {
+    projects.value.push(newProject);
+    closeModal();
+    };
+
+    const handleProjectUpdate = (updatedProject) => {
+    const index = projects.value.findIndex(p => p.project_id === updatedProject.project_id);
+    if (index !== -1) {
+        projects.value[index] = updatedProject;
+    }
+    closeModal();
+    };
+
+    // data pour l'overview cards (il faudra les récupérer depuis l'api)
     const date = new Date();
     const projectsActive = ref(5);
     const tasksInProgress = ref(3);
@@ -104,6 +142,7 @@
 
 <template>
     <main class="text-white min-h-screen">
+        <!-- Nav bar -->
         <div id="header-row" class="grid grid-cols-3">
             <div id="header-col" class="col-span-1">
                 <Header />
@@ -115,12 +154,11 @@
                 @input="filterProjects"
                 />
             </div>
-            <div id="logout-col" class="col-span-1 flex items-center justify-end px-20">
-                <a href="#" class="text-white">[→ Déconnexion</a>
-            </div>
+            <DeconnexionBtn />
         </div>    
         <hr class="mb-10 border-gray-500" />
         <div id="layout-dashboard" class="mx-20">
+            <!-- greetings + Nouveau projet -->
             <div id="first-row" class="grid grid-cols-2">
                 <div id="greeting-col" class="col-span-1">
                     <!-- date en français (samedi 8 aout 2026)-->
@@ -135,20 +173,32 @@
                     </p>
                 </div>
                 <div class="col-span-1 flex justify-end">
-                    <button class="bg-purple-500 text-white rounded-md px-4 h-10">+ Nouveau projet</button>
+                    <button 
+                    class="bg-purple-500 hover:bg-purple-700 text-white rounded-md px-4 h-10"
+                    @click="openAddProjectModal"
+                    >
+                        + Nouveau projet
+                    </button>
                 </div>
             </div>
+            <!-- OVERVIEW -->
             <div id="overview" class="grid grid-cols-4 gap-4 mt-10">
                 <OverviewCards label="Projet Actifs" :value="projectsActive"></OverviewCards>
                 <OverviewCards label="Tâches en cours" :value="tasksInProgress"></OverviewCards>
                 <OverviewCards label="Terminées ce mois" :value="tasksCompletedThisMonth"></OverviewCards>
                 <OverviewCards label="En retard" :value="tasksOverdue"></OverviewCards>
             </div>
+            <!-- MES PROJETS -->
             <div id="mes_projets" class="mt-10">
                 <p class="text-xl font-bold">Mes Projets</p>
                 <div class="grid grid-cols-3 gap-4">
                     <div v-for="project in projectsFiltered" :key="project.project_id" class="border border-gray-500 rounded-md p-4"  style="background-color: var(--input-bg);">
-                        <div :class="[`text-2xl font-bold mb-2 border rounded-md w-fit py-2 px-4`, getProjectColor(project.project_id)]">{{ project.project_name[0] }}</div>
+                        <div 
+                        :class="[`text-2xl font-bold mb-2 border rounded-md w-fit py-2 px-4`, getProjectColor(project.project_id)]"
+                        >
+                            <!-- LIEN A MODIFIER POUR REQUETER LE BON PROJET http://localhost:5173/kanban?project_id -->
+                            <a href="http://localhost:5173/kanban">{{ project.project_name[0] }}</a>
+                        </div>
                         <h2 class="text-lg font-bold">{{ project.project_name }}</h2>
                         <p>{{ project.project_description }}</p>
                         <!-- barre de progression -->
@@ -165,17 +215,26 @@
                             </div>
                         </div>
                         <p class="text-gray-500">{{ project.project_creation_date }}</p>
-                    </div>
-                    <!-- Ajout projet -->
-                    <div id="add-project-div" class="border border-gray-500 rounded-md p-4 flex flex-col items-center justify-center"  style="background-color: var(--input-bg);">
-                        <div class="text-lg font-bold border border-dashed text-center p-2 w-32 rounded-md">+</div>
-                        <p class="text-center">Nouveau projet.</p>
+                        <button 
+                        id="update-task" 
+                        class="mt-2 bg-purple-500 hover:bg-purple-700 text-white font-bold py-1 px-2 rounded"
+                        @click="openEditProjectModal(project)"
+                        >
+                            Modifier
+                        </button>
                     </div>
                 </div>
                 
             </div>
         </div>
-        
+        <ModalProject 
+        v-if="showModalProject" 
+        :mode="modalMode" 
+        :project="selectedProject" 
+        @create="handleProjectCreate" 
+        @update="handleProjectUpdate" 
+        @cancel="closeModal" 
+        />
     </main>
 
 </template>

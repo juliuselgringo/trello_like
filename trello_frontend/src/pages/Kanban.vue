@@ -1,6 +1,42 @@
 <script setup>
     import Header from '../components/Header.vue';
+    import DeconnexionBtn from '@/components/DeconnexionBtn.vue';
     import { ref } from 'vue';
+    import ModalTask from '@/components/ModalTask.vue';
+
+    // modal task
+    const showModalTask = ref(false);
+    const modalMode = ref('add');
+    const selectedTask = ref(null);
+
+    const openAddTaskModal = () => {
+        modalMode.value = 'add';
+        selectedTask.value = null;
+        showModalTask.value = true;
+    };
+
+    const openEditTaskModal = (task) => {
+        modalMode.value = 'edit';
+        selectedTask.value = task;
+        showModalTask.value = true;
+    };
+
+    const closeModal = () => {
+        showModalTask.value = false;
+    };
+
+    const handleTaskCreate = (newTask) => {
+    tasks.value.push(newTask);
+    closeModal();
+    };
+
+    const handleTaskUpdate = (updatedTask) => {
+    const index = tasks.value.findIndex(t => t.task_id === updatedTask.task_id);
+    if (index !== -1) {
+        tasks.value[index] = updatedTask;
+    }
+    closeModal();
+    };
 
     // fetch /api/columns
     const column_ = ref([
@@ -22,11 +58,11 @@
     
     // fetch /api/tasks/project_id 
     const tasks = ref([
-        { task_id: 1, task_name: "Tâche 1", task_description: "Description de la tâche 1", column_id: 1},
-        { task_id: 2, task_name: "Tâche 2", task_description: "Description de la tâche 2", column_id: 2},
-        { task_id: 3, task_name: "Tâche 3", task_description: "Description de la tâche 3", column_id: 3},
-        { task_id: 4, task_name: "Tâche 4", task_description: "Description de la tâche 4", column_id: 1},
-        { task_id: 5, task_name: "Tâche 5", task_description: "Description de la tâche 5", column_id: 2},
+        { task_id: 1, task_name: "Tâche 1", task_description: "Description de la tâche 1", task_dead_line: "01/01/2027", column_id: 1},
+        { task_id: 2, task_name: "Tâche 2", task_description: "Description de la tâche 2", task_dead_line: "02/01/2027", column_id: 2},
+        { task_id: 3, task_name: "Tâche 3", task_description: "Description de la tâche 3", task_dead_line: "03/01/2027", column_id: 3},
+        { task_id: 4, task_name: "Tâche 4", task_description: "Description de la tâche 4", task_dead_line: "04/01/2027", column_id: 1},
+        { task_id: 5, task_name: "Tâche 5", task_description: "Description de la tâche 5", task_dead_line: "05/01/2027", column_id: 2},
     ]);
 
     // fetch /api/tagged/joinTag
@@ -45,22 +81,7 @@
     ]);
 
     const getClassForTag = (tag_color) => {
-        switch(tag_color) {
-            case 'red':
-                return 'bg-red-500';
-            case 'yellow':
-                return 'bg-yellow-500';
-            case 'orange':
-                return 'bg-orange-500';
-            case 'blue':
-                return 'bg-blue-500';
-            case 'green':
-                return 'bg-green-500';
-            case 'purple':
-                return 'bg-purple-500';
-            default:
-                return '';
-        }
+        return `bg-${tag_color}-500`;
     };
 
 
@@ -72,12 +93,24 @@
             <div id="header-col" class="col-span-1">
                 <Header />
             </div>
-            <div id="logout-col" class="col-start-3 col-span-1 flex items-center justify-end px-20">
-                <a href="#" class="text-white">[→ Déconnexion</a>
+            <div class="col-start-2 col-span-1 flex items-center justify-center">
+                <a href="http://localhost:5173/Dashboard" class="text-white">&lt; Dashboard</a>
             </div>
+            <DeconnexionBtn />
         </div>
         <hr class="mb-10 border-gray-500" />
 
+        <div id="project-info" class="mx-20 mb-10 grid grid-cols-2 gap-4">
+            <div id="project-details" class="col-span-1">
+                <div id="today" class="text-gray-400 mb-2">Aujourd'hui : {{ new Date().toLocaleDateString() }}</div>
+                <h1 class="text-3xl font-bold mb-4">{{ project.project_name }}</h1>
+                <p class="mb-2">{{ project.project_description }}</p>
+                <p class="mb-2">Date de création : {{ project.project_creation_date }}</p>
+            </div>
+            <div id="project-actions" class="col-span-1 flex items-center justify-end">
+                <button id="add-task" @click="openAddTaskModal" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">+ Ajouter une tâche</button>
+            </div>
+        </div>
         <div :class="[classColumn, 'mx-20']">
             <div v-for="column in column_" 
             :key="column.column_id" 
@@ -94,12 +127,23 @@
                     <div class="flex flex-wrap gap-2">
                         <span v-for="tag in tagged.filter(tag => tag.task_id === task.task_id)" :key="tag.tag_id" :class="[getClassForTag(tag.tag_color), 'text-white px-2 py-1 rounded-full text-sm']">{{ tag.tag_name }}</span>
                     </div>
+                    <div id="deadline" class="text-gray-400 mt-2">Date limite : {{ task.task_dead_line }}</div>
+                    <button id="update-task" @click="openEditTaskModal(task)" class="mt-2 bg-purple-500 hover:bg-purple-700 text-white font-bold py-1 px-2 rounded">Modifier</button>
                 </div>
             </div>
 
         </div>
 
 
+        <ModalTask 
+            v-if="showModalTask" 
+            :mode="modalMode" 
+            :task="selectedTask" 
+            :project="project" 
+            @create="handleTaskCreate" 
+            @update="handleTaskUpdate" 
+            @cancel="showModalTask = false"
+        />
     </main>
 </template>
 

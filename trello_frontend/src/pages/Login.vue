@@ -38,7 +38,8 @@
                 <div class="text-right">
                     <a class="text-purple-500" href="" target="blank">Mot de passe oublié?</a>
                 </div>
-                <button class="py-2 bg-purple-500 rounded-md w-full">Se Connecter -> </button>
+                <!-- ATTENTION LIEN POUR LE DEV A MODIFIER -->
+                <button class="py-2 bg-purple-500 rounded-md w-full"><a href="http://localhost:5173/dashboard">Se Connecter -></a></button>
                 <p class="text-center">Pas encore de compte ? <a class="text-purple-500" href="" target="blank">S'inscrire</a></p>
             </form>
 
