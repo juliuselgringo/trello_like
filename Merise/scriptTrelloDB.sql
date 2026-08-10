@@ -1,5 +1,3 @@
-CREATE DATABASE trellodb;
-
 DROP TABLE IF EXISTS Tagged CASCADE;
 DROP TABLE IF EXISTS Has_ CASCADE;
 DROP TABLE IF EXISTS Task CASCADE;
@@ -33,7 +31,6 @@ CREATE TABLE Task(
    task_name VARCHAR(50) NOT NULL,
    task_description VARCHAR(200) NOT NULL,
    task_dead_line DATE,
-   task_order INT NOT NULL,
    column_id INT,
    project_id INT,
    FOREIGN KEY(column_id) REFERENCES Column_(column_id) ON DELETE SET NULL,
@@ -42,7 +39,8 @@ CREATE TABLE Task(
 
 CREATE TABLE Tag(
    tag_id SERIAL PRIMARY KEY,
-   tag_name VARCHAR(50) NOT NULL UNIQUE
+   tag_name VARCHAR(50) NOT NULL UNIQUE,
+   tag_color VARCHAR(7) NOT NULL
 );
 
 CREATE TABLE Has_(
@@ -75,9 +73,9 @@ VALUES
 
 INSERT INTO Column_ (column_name)
 VALUES
-('Backlog'),
-('In Progress'),
-('Done');
+('A faire'),
+('En cours'),
+('Terminée');
 
 INSERT INTO Has_ (project_id, column_id, has_order)
 VALUES
@@ -88,27 +86,31 @@ VALUES
 (2, 2, 2),
 (2, 3, 3);
 
-INSERT INTO Task (task_name, task_description, task_dead_line, task_order, column_id, project_id)
+INSERT INTO Task (task_name, task_description, task_dead_line, column_id, project_id)
 VALUES
-('Creer API auth', 'Endpoints login et register', CURRENT_DATE + 7, 1, 1, 1),
-('Configurer CI', 'Pipeline lint et tests', CURRENT_DATE + 5, 2, 2, 1),
-('Polir page board', 'Ameliorer UX drag and drop', CURRENT_DATE + 10, 1, 2, 2),
-('Deployer staging', 'Deploy auto sur branche develop', CURRENT_DATE + 14, 2, 3, 2);
+('Creer API auth', 'Endpoints login et register', CURRENT_DATE + 7, 1, 1),
+('Configurer CI', 'Pipeline lint et tests', CURRENT_DATE + 5, 2, 1),
+('Polir page board', 'Ameliorer UX drag and drop', CURRENT_DATE + 10, 2, 2),
+('Deployer staging', 'Deploy auto sur branche develop', CURRENT_DATE + 14, 3, 2);
 
-INSERT INTO Tag (tag_name)
+INSERT INTO Tag (tag_name, tag_color)
 VALUES
-('urgent'),
-('frontend'),
-('backend'),
-('devops');
+('Urgent', 'red'),
+('Moyennement urgent', 'orange'),
+('Peu urgent', 'yellow'),
+('Frontend', 'blue'),
+('Backend', 'green'),
+('Devops', 'purple');
 
 INSERT INTO Tagged (task_id, tag_id)
 VALUES
-(1, 3),
 (1, 1),
-(2, 4),
+(1, 4),
+(2, 3),
+(2, 5),
 (3, 2),
-(4, 4);
+(4, 1),
+(4, 6);
 
 -- Validation queries
 SELECT current_database();
@@ -122,3 +124,5 @@ FROM Tagged tg
 JOIN Task t ON t.task_id = tg.task_id
 JOIN Tag g ON g.tag_id = tg.tag_id
 ORDER BY t.task_id, g.tag_name;
+
+-- UPDATE column_ SET column_name = 'Terminée' WHERE column_id = 3;
