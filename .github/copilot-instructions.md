@@ -4,7 +4,31 @@ Ce projet est un support d'apprentissage pour progresser vers les frameworks.
 
 - Objectif principal: apprendre Django et Vue.js en profondeur.
 - Contrainte pedagogique: ne pas coder a la place de l'etudiante.
-- Materiel deja disponible: maquettes, modele Merise, base de donnees, projet Vue deja initialise dans `trello_like_project/`.
+- Materiel deja disponible: maquettes, modele Merise, base de donnees, projet Vue deja initialise dans `trello_frontend/`.
+
+## État du projet (2026-08-11)
+
+### Frontend ✅ Complété
+- Routing 4 routes (/, /login, /dashboard, /kanban) avec lazy-loading
+- Pages : Login.vue, Dashboard.vue (liste projets + modales), Kanban.vue (colonnes + modales)
+- Composants réutilisables : Header, OverviewCards, ModalProject, ModalTask, DeconnexionBtn
+- Design complet avec Tailwind CSS + variables CSS centralisées
+- Mock data : projets, tâches, tags en ref() (prêts pour API)
+- Modales upsert (add/edit) pour projets et tâches
+
+### Backend 🔄 En cours
+- ✅ Models Django (Project, Task, Column, Tag, User — auto-générés)
+- ✅ Serializers DRF (ProjectSerializer, TaskSerializer)
+- ✅ ViewSets (ProjectViewSet, TaskViewSet avec ModelViewSet)
+- ✅ Endpoints implémentés : GET/POST /api/projects/ testés
+- ⏳ Endpoints tâches : compléter tests CRUD
+- ⏳ Authentification (JWT recommandé)
+- ⏳ CORS configuration pour frontend
+
+### Prochaines étapes
+1. **Connexion API** : remplacer mock data par fetch() vers Django REST
+2. **Drag-drop** : implémenter avec events natifs ou lib (après API)
+3. **Tests** : unit + e2e (bonus si temps)
 
 # Style d'accompagnement attendu
 

@@ -4,7 +4,7 @@
     import OverviewCards from '../components/OverviewCards.vue';
     import ModalProject from '../components/ModalProject.vue';
     
-    import { ref } from 'vue';
+    import { ref, onMounted, onUnmounted } from 'vue';
 
     // modal project
     const showModalProject = ref(false);
@@ -47,22 +47,35 @@
     const tasksCompletedThisMonth = ref(18);
     const tasksOverdue = ref(2);
 
-    // fetch /api/projects
-    const projects = ref([
-        { project_id: 1, project_name: "Projet 1", project_description: "Description du projet 1", project_creation_date: "01/01/2026" },
-        { project_id: 2, project_name: "Trojet 2", project_description: "Description du projet 2", project_creation_date: "15/02/2026" },
-        { project_id: 3, project_name: "Crojet 3", project_description: "Description du projet 3", project_creation_date: "20/03/2026" },
-        { project_id: 4, project_name: "Frojet 4", project_description: "Description du projet 4", project_creation_date: "05/04/2026" },
-        { project_id: 5, project_name: "Trojet 5", project_description: "Description du projet 5", project_creation_date: "10/05/2026" },
-        { project_id: 6, project_name: "Projet 6", project_description: "Description du projet 6", project_creation_date: "15/06/2026" },
-        { project_id: 7, project_name: "Projet 7", project_description: "Description du projet 7", project_creation_date: "20/07/2026" },
-        { project_id: 8, project_name: "Projet 8", project_description: "Description du projet 8", project_creation_date: "25/08/2026" },
-        { project_id: 9, project_name: "Projet 9", project_description: "Description du projet 9", project_creation_date: "30/09/2026" },
-        { project_id: 10, project_name: "Projet 10", project_description: "Description du projet 10", project_creation_date: "05/10/2026" },
-    ]);
+    // Récupérer les projets depuis l'API
+    const projects = ref([]);
+    const projectsFiltered = ref([]);
 
-    const projectsFiltered = ref([...projects.value]);
+    const fetchProjects = async () => {
+        const controller = new AbortController();
 
+        try {
+            const response = await fetch('http://localhost:8000/api/projects/', { signal: controller.signal });
+            if (!response.ok) {
+                throw new Error(`Erreur API: ${response.status}`);
+            }
+            const data = await response.json();
+            projects.value = data;
+            projectsFiltered.value = [...data];
+        } catch (error) {
+            console.error('Erreur lors du fetch des projets:', error);
+        }
+    };
+
+    onMounted(() => {
+        fetchProjects();
+    });
+
+    onUnmounted(() => {
+        controller.abort(); // Annule le fetch si on quitte
+    });
+
+    // Couleurs pour les projets et la barre de progression
     const colors = ref([
         "text-purple-500",
         "text-yellow-500",
@@ -129,8 +142,8 @@
     };
 
     const getProjectProgressColor = (project_id) => {
-        const projectColor = progressColors.value[project_id > progressColors.value.length ? (project_id - progressColors.value.length - 1) : (project_id - 1)];
-        return projectColor;
+        const projectProgressColor = progressColors.value[project_id > progressColors.value.length ? (project_id - progressColors.value.length - 1) : (project_id - 1)];
+        return projectProgressColor;
     };
 
     const filterProjects = (event) => {

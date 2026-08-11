@@ -64,7 +64,6 @@ class Task(models.Model):
     task_name = models.CharField(max_length=50)
     task_description = models.CharField(max_length=200)
     task_dead_line = models.DateField(blank=True, null=True)
-    task_order = models.IntegerField()
     column = models.ForeignKey(Column, models.DO_NOTHING, blank=True, null=True)
     project = models.ForeignKey(Project, models.DO_NOTHING, blank=True, null=True)
 
