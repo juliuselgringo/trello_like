@@ -18,3 +18,4 @@ class TaskViewSet(viewsets.ModelViewSet):
         if project_id:
             queryset = queryset.filter(project_id=project_id)
         return queryset
+

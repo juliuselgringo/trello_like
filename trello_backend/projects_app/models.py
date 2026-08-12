@@ -1,4 +1,4 @@
-﻿# This is an auto-generated Django model module.
+# This is an auto-generated Django model module.
 # You'll have to do the following manually to clean this up:
 #   * Rearrange models' order
 #   * Make sure each model has one field with primary_key=True
@@ -20,7 +20,7 @@ class Column(models.Model):
 class Has(models.Model):
     pk = models.CompositePrimaryKey('project_id', 'column_id')
     project = models.ForeignKey('Project', models.DO_NOTHING)
-    column = models.ForeignKey(Column, models.DO_NOTHING)
+    column_id = models.IntegerField()
     has_order = models.IntegerField()
 
     class Meta:
@@ -43,6 +43,7 @@ class Project(models.Model):
 class Tag(models.Model):
     tag_id = models.AutoField(primary_key=True)
     tag_name = models.CharField(unique=True, max_length=50)
+    tag_color = models.CharField(max_length=7)
 
     class Meta:
         managed = False

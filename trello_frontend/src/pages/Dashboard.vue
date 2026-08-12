@@ -206,28 +206,30 @@
                 <p class="text-xl font-bold">Mes Projets</p>
                 <div class="grid grid-cols-3 gap-4">
                     <div v-for="project in projectsFiltered" :key="project.project_id" class="border border-gray-500 rounded-md p-4"  style="background-color: var(--input-bg);">
-                        <div 
-                        :class="[`text-2xl font-bold mb-2 border rounded-md w-fit py-2 px-4`, getProjectColor(project.project_id)]"
-                        >
-                            <!-- LIEN A MODIFIER POUR REQUETER LE BON PROJET http://localhost:5173/kanban?project_id -->
-                            <a href="http://localhost:5173/kanban">{{ project.project_name[0] }}</a>
-                        </div>
-                        <h2 class="text-lg font-bold">{{ project.project_name }}</h2>
-                        <p>{{ project.project_description }}</p>
-                        <!-- barre de progression -->
-                         <div class="w-full grid grid-cols-2">
-                            <span>
-                               {{ getProjectTasksDone(project.project_id) }} / {{ getProjectTasks(project.project_id) }}
-                            </span>
-                            <span class="col-span-1 text-gray-500 text-right">
-                                {{ getProjectProgress(project.project_id).toFixed(2) }}%
-                            </span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-4 dark:bg-gray-700">
-                            <div :class="[`h-4 rounded-full`, getProjectProgressColor(project.project_id)]" :style="`width: ${getProjectProgress(project.project_id)}%`">
+                        <a :href="`http://localhost:5173/kanban?project_id=${project.project_id}`">
+                            <div 
+                            :class="[`text-2xl font-bold mb-2 border rounded-md w-fit py-2 px-4`, getProjectColor(project.project_id)]"
+                            >
+                                <!-- LIEN A MODIFIER POUR REQUETER LE BON PROJET http://localhost:5173/kanban?project_id -->
+                                {{ project.project_name[0] }}
                             </div>
-                        </div>
-                        <p class="text-gray-500">{{ project.project_creation_date }}</p>
+                            <h2 class="text-lg font-bold">{{ project.project_name }}</h2>
+                            <p>{{ project.project_description }}</p>
+                            <!-- barre de progression -->
+                            <div class="w-full grid grid-cols-2">
+                                <span>
+                                {{ getProjectTasksDone(project.project_id) }} / {{ getProjectTasks(project.project_id) }}
+                                </span>
+                                <span class="col-span-1 text-gray-500 text-right">
+                                    {{ getProjectProgress(project.project_id).toFixed(2) }}%
+                                </span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-4 dark:bg-gray-700">
+                                <div :class="[`h-4 rounded-full`, getProjectProgressColor(project.project_id)]" :style="`width: ${getProjectProgress(project.project_id)}%`">
+                                </div>
+                            </div>
+                            <p class="text-gray-500">{{ project.project_creation_date }}</p>
+                        </a>
                         <button 
                         id="update-task" 
                         class="mt-2 bg-purple-500 hover:bg-purple-700 text-white font-bold py-1 px-2 rounded"

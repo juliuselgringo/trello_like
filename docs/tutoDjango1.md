@@ -95,3 +95,9 @@ DATABASES = {
 ```
 python manage.py inspectdb | Out-File -FilePath .\projects_app\models.py -Encoding utf8
 ```
+
+4. Si tu modifies la database, met à jour models.py
+
+````
+python manage.py inspectdb > projects_app/models.py
+```
