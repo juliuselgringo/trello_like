@@ -47,6 +47,46 @@ src/
   └── public/              # Assets statiques
 ```
 
+## 🔐 Authentification JWT
+
+### Configuration CORS
+
+Le backend envoie les JWT en **HttpOnly cookies**. Pour que le navigateur les envoie automatiquement :
+
+**Tous les fetch doivent inclure** :
+```javascript
+fetch('http://localhost:8000/api/projects/', {
+  credentials: 'include'  // 👈 IMPORTANT ! Envoie le cookie JWT
+})
+```
+
+### Workflow
+
+1. **Login** → `POST /api/auth/login/`
+   - Envoie : `{user_name, user_password}`
+   - Reçoit : cookie `access_token` (HttpOnly)
+   - Redirige vers `/dashboard`
+
+2. **Requêtes API** → `GET /api/projects/`
+   - Navigateur envoie le cookie automatiquement
+   - Backend valide le JWT
+   - Retourne les données
+
+3. **Logout** → supprimer le cookie et rediriger vers `/login`
+
+---
+
+## 🔌 Endpoints API utilisés
+
+- **POST** `/api/auth/login/` → Authentification
+- **POST** `/api/auth/register/` → Créer un compte
+- **GET** `/api/projects/` → Lister projets (protégé)
+- **GET** `/api/tasks/?project_id=X` → Lister tâches (protégé)
+- **GET** `/api/columns/` → Lister colonnes (protégé)
+- **POST/PUT/DELETE** → CRUD (protégé)
+
+---
+
 ## 🎨 Design System
 
 ### Couleurs (CSS Variables)

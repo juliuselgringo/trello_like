@@ -62,7 +62,73 @@ requirements.txt          # Dépendances
 db.sqlite3               # BD local (dev)
 ```
 
-## 🔌 Endpoints implémentés
+## � Authentification & Sécurité
+
+### JWT HttpOnly Cookies
+
+L'API utilise **JWT tokens stockés dans des cookies HttpOnly** :
+
+- 🔒 **HttpOnly** : le token n'est pas accessible à JavaScript (protection XSS)
+- 🔒 **Secure** : le token est envoyé uniquement en HTTPS
+- 🔒 **SameSite=Lax** : protection CSRF
+
+### Configuration requise
+
+Dans `backDjango/settings.py` :
+```python
+INSTALLED_APPS = [
+    ...
+    'rest_framework_simplejwt',
+]
+
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = ['http://localhost:5173']
+```
+
+### Login / Registrat
+
+**POST** `/api/auth/register/`  
+Créer un utilisateur.
+
+```bash
+curl -X POST http://localhost:8000/api/auth/register/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_name": "alice",
+    "user_email": "alice@example.com",
+    "user_password": "securepass123"
+  }'
+```
+
+Response: `{"message": "User registered successfully"}` (201)
+
+---
+
+**POST** `/api/auth/login/`  
+Se connecter et recevoir un JWT cookie.
+
+```bash
+curl -X POST http://localhost:8000/api/auth/login/ \
+  -H "Content-Type: application/json" \
+  -d '{"user_name": "alice", "user_password": "securepass123"}' \
+  -v  # Pour voir le Set-Cookie header
+```
+
+Response (200) + `Set-Cookie: access_token=....; HttpOnly; Secure; SameSite=Lax`
+
+---
+
+### Endpoints protégés
+
+**Tous les endpoints API nécessitent l'authentification** via le cookie JWT.
+
+Le frontend envoie automatiquement le cookie si `credentials: 'include'` est configuré.
+
+**Note** : Le cookie est envoyé automatiquement par le navigateur — pas besoin de l'ajouter manuellement aux headers.
+
+---
+
+## �🔌 Endpoints implémentés
 
 ### Projects
 

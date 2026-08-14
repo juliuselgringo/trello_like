@@ -6,7 +6,9 @@
 </script>
 
 <template>
-    <div :id="label" class="h-28 border border-gray-500 rounded-md p-4" style="background-color: var(--input-bg);">
+    <div :id="label" 
+    class="border border-gray-500 rounded-md p-4 w-64 flex flex-col items-center justify-center gap-2" 
+    style="background-color: var(--input-bg);">
         <p class="text-gray-500">{{ label }}</p>
         <span 
         :class="{

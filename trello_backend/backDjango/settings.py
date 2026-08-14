@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'projects_app',
+    'rest_framework_simplejwt',
 
 ]
 
@@ -133,3 +134,12 @@ STATIC_URL = 'static/'
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',  # Frontend Vue.js dev server
 ]
+
+CORS_ALLOW_CREDENTIALS = True
+
+# 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}

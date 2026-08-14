@@ -6,29 +6,35 @@ Ce projet est un support d'apprentissage pour progresser vers les frameworks.
 - Contrainte pedagogique: ne pas coder a la place de l'etudiante.
 - Materiel deja disponible: maquettes, modele Merise, base de donnees, projet Vue deja initialise dans `trello_frontend/`.
 
-## État du projet (2026-08-11)
+## État du projet (2026-08-14)
 
-### Frontend ✅ Complété
-- Routing 4 routes (/, /login, /dashboard, /kanban) avec lazy-loading
-- Pages : Login.vue, Dashboard.vue (liste projets + modales), Kanban.vue (colonnes + modales)
-- Composants réutilisables : Header, OverviewCards, ModalProject, ModalTask, DeconnexionBtn
-- Design complet avec Tailwind CSS + variables CSS centralisées
-- Mock data : projets, tâches, tags en ref() (prêts pour API)
-- Modales upsert (add/edit) pour projets et tâches
+### Frontend 🔄
+- ✅ Routing 4 routes (/, /login, /dashboard, /kanban) avec lazy-loading
+- ✅ Pages : Login.vue, Dashboard.vue (liste projets + modales), Kanban.vue (colonnes + modales)
+- ✅ Composants réutilisables : Header, OverviewCards, ModalProject, ModalTask, DeconnexionBtn
+- ✅ Design complet avec Tailwind CSS + variables CSS centralisées
+- ✅ Responsive avec Flex/Grid (colonnes wrap sur petit écran)
+- ⏳ Login.vue : intégrer `/api/auth/login/` (actuellement mock)
+- ⏳ Dashboard.vue + Kanban.vue : envoyer cookies dans fetch (credentials: 'include')
 
-### Backend 🔄 En cours
-- ✅ Models Django (Project, Task, Column, Tag, User — auto-générés)
-- ✅ Serializers DRF (ProjectSerializer, TaskSerializer)
-- ✅ ViewSets (ProjectViewSet, TaskViewSet avec ModelViewSet)
-- ✅ Endpoints implémentés : GET/POST /api/projects/ testés
-- ⏳ Endpoints tâches : compléter tests CRUD
-- ⏳ Authentification (JWT recommandé)
-- ⏳ CORS configuration pour frontend
+### Backend ✅ Complété (Phase 1)
+- ✅ Models Django (Project, Task, Column, Tag, User — fields incluent user_name)
+- ✅ Serializers DRF (ProjectSerializer, TaskSerializer avec nested Tags)
+- ✅ ViewSets (ProjectViewSet, TaskViewSet avec IsAuthenticated permission)
+- ✅ Endpoints GET/POST/PUT/DELETE /api/projects/ et /api/tasks/
+- ✅ **Authentification JWT** :
+  - LoginView (POST /api/auth/login/) → JWT HttpOnly cookie
+  - RegisterView (POST /api/auth/register/) → crée user avec password hashé
+  - Protection : tous endpoints nécessitent IsAuthenticated
+- ✅ CORS configuré (CORS_ALLOW_CREDENTIALS = True)
+- ✅ DB optimization (prefetch_related pour nested tags)
 
 ### Prochaines étapes
-1. **Connexion API** : remplacer mock data par fetch() vers Django REST
-2. **Drag-drop** : implémenter avec events natifs ou lib (après API)
-3. **Tests** : unit + e2e (bonus si temps)
+1. **Frontend Login API** : fetch /api/auth/login/ + redirection
+2. **Frontend API Integration** : ajouter `credentials: 'include'` dans Dashboard/Kanban
+3. **Multi-user** : permissions pour collaborateurs sur un projet
+4. **Drag-drop Kanban** : déplacer tâches entre colonnes
+5. **Tests** : unit + E2E (bonus)
 
 # Style d'accompagnement attendu
 

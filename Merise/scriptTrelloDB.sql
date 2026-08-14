@@ -8,6 +8,7 @@ DROP TABLE IF EXISTS User_ CASCADE;
 
 CREATE TABLE User_(
    user_id SERIAL PRIMARY KEY,
+   user_name VARCHAR(50) NOT NULL,
    user_email VARCHAR(50) NOT NULL UNIQUE,
    user_password VARCHAR(255) NOT NULL
 );
@@ -61,10 +62,10 @@ CREATE TABLE Tagged(
 );
 
 -- Test data
-INSERT INTO User_ (user_email, user_password)
+INSERT INTO User_ (user_name, user_email, user_password)
 VALUES
-('alice@example.com', 'alice_pwd'),
-('bob@example.com', 'bob_pwd');
+('Alice', 'alice@example.com', 'alice_pwd'),
+('Bob', 'bob@example.com', 'bob_pwd');
 
 INSERT INTO Project (project_name, project_description, project_creation_date, user_id)
 VALUES

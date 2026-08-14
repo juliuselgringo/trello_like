@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Project, Task, Tagged, Tag
+from .models import Project, Task, Tagged, Tag, Column, User
 
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
@@ -25,6 +25,12 @@ class TaskSerializer(serializers.ModelSerializer):
         model = Task
         fields = ['task_id', 'task_name', 'task_description', 'task_dead_line', 'column', 'project', 'taggeds']
 
+class ColumnSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Column
+        fields = ['column_id', 'column_name'];
 
-
-
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['user_id', 'user_email', 'user_password'];

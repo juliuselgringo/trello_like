@@ -50,9 +50,10 @@
     // Récupérer les projets depuis l'API
     const projects = ref([]);
     const projectsFiltered = ref([]);
+    const controller = new AbortController();
 
     const fetchProjects = async () => {
-        const controller = new AbortController();
+
 
         try {
             const response = await fetch('http://localhost:8000/api/projects/', { signal: controller.signal });
@@ -67,8 +68,27 @@
         }
     };
 
+    // récupérer les tâches depuis l'API fetch /api/tasks/
+    const tasks = ref([]);
+    const fetchTasks = async () => {
+        
+
+        try{
+            const response = await fetch('http://localhost:8000/api/tasks/', { signal: controller.signal });
+            if (!response.ok) {
+                throw new Error(`Erreur API: ${response.status}`);
+            }
+            const data = await response.json();
+            tasks.value = data;
+        } catch (error) {
+            console.error('Erreur lors du fetch des tâches:', error);   
+        }
+    };
+    
+
     onMounted(() => {
         fetchProjects();
+        fetchTasks();
     });
 
     onUnmounted(() => {
@@ -91,43 +111,17 @@
         "bg-blue-500",
     ]);
 
-    // fetch /api/tasks/project_id/count
-    const tasksByProject = ref([
-        { project_id: 1, tasks: 5 },
-        { project_id: 2, tasks: 3 },
-        { project_id: 3, tasks: 8 },
-        { project_id: 4, tasks: 2 },
-        { project_id: 5, tasks: 6 },
-        { project_id: 6, tasks: 6 },
-        { project_id: 7, tasks: 4 },
-        { project_id: 8, tasks: 7 },
-        { project_id: 9, tasks: 5 },
-        { project_id: 10, tasks: 3 },
-    ]);
 
-    // fetch /api/tasks/project_id/done/count
-    const tasksDoneByProject = ref([
-        { project_id: 1, tasks_done: 3 },
-        { project_id: 2, tasks_done: 1 },
-        { project_id: 3, tasks_done: 5 },
-        { project_id: 4, tasks_done: 2 },
-        { project_id: 5, tasks_done: 4 },
-        { project_id: 6, tasks_done: 5 },
-        { project_id: 7, tasks_done: 3 },
-        { project_id: 8, tasks_done: 6 },
-        { project_id: 9, tasks_done: 4 },
-        { project_id: 10, tasks_done: 2 },
-    ]);
     
 
     const getProjectTasks = (project_id) => {
-        const found = tasksByProject.value.find(p => p.project_id === project_id);
-        return found ? found.tasks : 0;
+        const found = tasks.value.filter(t => t.project === project_id);
+        return found ? found.length : 0;
     };
 
     const getProjectTasksDone = (project_id) => {
-        const found = tasksDoneByProject.value.find(p => p.project_id === project_id);
-        return found ? found.tasks_done : 0;
+        const found = tasks.value.filter(t => t.project === project_id && t.column === 3);
+        return found ? found.length : 0;
     };
 
     const getProjectProgress = (project_id) => {
@@ -156,11 +150,11 @@
 <template>
     <main class="text-white min-h-screen">
         <!-- Nav bar -->
-        <div id="header-row" class="grid grid-cols-3">
-            <div id="header-col" class="col-span-1">
+        <div id="header-row" class="flex flex-wrap gap-4 items-center justify-between">
+            <div id="header-col">
                 <Header />
             </div>
-            <div id="search-col" class="col-span-1 items-center flex justify-center">
+            <div id="search-col" class="ml-10">
                 <input class="w-full rounded-md px-4 py-2 text-gray-400 border border-gray-500" 
                 style="background-color: var(--input-bg);" 
                 type="text" placeholder="&#128269; Rechercher..."  
@@ -170,9 +164,9 @@
             <DeconnexionBtn />
         </div>    
         <hr class="mb-10 border-gray-500" />
-        <div id="layout-dashboard" class="mx-20">
+        <div id="layout-dashboard" class="mx-10">
             <!-- greetings + Nouveau projet -->
-            <div id="first-row" class="grid grid-cols-2">
+            <div id="first-row" class="flex flex-wrap gap-4 items-center justify-between">
                 <div id="greeting-col" class="col-span-1">
                     <!-- date en français (samedi 8 aout 2026)-->
                     <p id="date">
@@ -187,7 +181,7 @@
                 </div>
                 <div class="col-span-1 flex justify-end">
                     <button 
-                    class="bg-purple-500 hover:bg-purple-700 text-white rounded-md px-4 h-10"
+                    class="bg-purple-500 hover:bg-purple-700 text-white rounded-md p-2"
                     @click="openAddProjectModal"
                     >
                         + Nouveau projet
@@ -195,7 +189,7 @@
                 </div>
             </div>
             <!-- OVERVIEW -->
-            <div id="overview" class="grid grid-cols-4 gap-4 mt-10">
+            <div id="overview" class="flex flex-wrap gap-4 mt-10">
                 <OverviewCards label="Projet Actifs" :value="projectsActive"></OverviewCards>
                 <OverviewCards label="Tâches en cours" :value="tasksInProgress"></OverviewCards>
                 <OverviewCards label="Terminées ce mois" :value="tasksCompletedThisMonth"></OverviewCards>
@@ -204,35 +198,41 @@
             <!-- MES PROJETS -->
             <div id="mes_projets" class="mt-10">
                 <p class="text-xl font-bold">Mes Projets</p>
-                <div class="grid grid-cols-3 gap-4">
-                    <div v-for="project in projectsFiltered" :key="project.project_id" class="border border-gray-500 rounded-md p-4"  style="background-color: var(--input-bg);">
-                        <a :href="`http://localhost:5173/kanban?project_id=${project.project_id}`">
+                <div class="flex flex-wrap gap-4">
+                    <div id="project-card" 
+                    v-for="project in projectsFiltered" 
+                    :key="project.project_id" 
+                    class="flex flex-col border border-gray-500 rounded-md p-4 w-64"  
+                    style="background-color: var(--input-bg);">
+                        <a :href="`http://localhost:5173/kanban?project_id=${project.project_id}`" class="flex flex-col h-full">
                             <div 
                             :class="[`text-2xl font-bold mb-2 border rounded-md w-fit py-2 px-4`, getProjectColor(project.project_id)]"
                             >
-                                <!-- LIEN A MODIFIER POUR REQUETER LE BON PROJET http://localhost:5173/kanban?project_id -->
                                 {{ project.project_name[0] }}
                             </div>
                             <h2 class="text-lg font-bold">{{ project.project_name }}</h2>
                             <p>{{ project.project_description }}</p>
                             <!-- barre de progression -->
-                            <div class="w-full grid grid-cols-2">
+                            <div id="progress-bar" class="mt-auto">
+                                <div class="w-full grid grid-cols-2">
                                 <span>
-                                {{ getProjectTasksDone(project.project_id) }} / {{ getProjectTasks(project.project_id) }}
-                                </span>
-                                <span class="col-span-1 text-gray-500 text-right">
-                                    {{ getProjectProgress(project.project_id).toFixed(2) }}%
-                                </span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-4 dark:bg-gray-700">
-                                <div :class="[`h-4 rounded-full`, getProjectProgressColor(project.project_id)]" :style="`width: ${getProjectProgress(project.project_id)}%`">
+                                    {{ getProjectTasksDone(project.project_id) }} / {{ getProjectTasks(project.project_id) }}
+                                    </span>
+                                    <span class="col-span-1 text-gray-500 text-right">
+                                        {{ getProjectProgress(project.project_id).toFixed(2) }}%
+                                    </span>
                                 </div>
-                            </div>
-                            <p class="text-gray-500">{{ project.project_creation_date }}</p>
+                                <div class="w-full bg-gray-200 rounded-full h-4 dark:bg-gray-700">
+                                    <div :class="[`h-4 rounded-full`, getProjectProgressColor(project.project_id)]" :style="`width: ${getProjectProgress(project.project_id)}%`">
+                                    </div>
+                                </div>
+                                <p class="text-gray-500">{{ project.project_creation_date }}</p>
+                             </div>
+                            
                         </a>
                         <button 
                         id="update-task" 
-                        class="mt-2 bg-purple-500 hover:bg-purple-700 text-white font-bold py-1 px-2 rounded"
+                        class="mt-auto bg-purple-500 hover:bg-purple-700 text-white font-bold py-1 px-2 rounded"
                         @click="openEditProjectModal(project)"
                         >
                             Modifier

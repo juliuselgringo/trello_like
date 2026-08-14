@@ -19,7 +19,7 @@ Voir [.github/copilot-instructions.md](.github/copilot-instructions.md) pour les
 ```
 trello_like/
 ├── .github/
-│   └── copilot-instructions.md     # Principes pédagogiques + contexte
+│   └── copilot-instructions.md     # Principes pédagogiques + contexte + état
 ├── docs/                           # Tutoriels et documentation
 │   ├── tutoDjango1.md
 │   ├── tutoDjango2.md
@@ -29,25 +29,58 @@ trello_like/
 │   ├── scriptTrelloDB.sql
 │   ├── trello_like.lo1
 │   └── trello_like.loo
-├── trello_backend/                 # Django app
+├── trello_backend/                 # Django REST Framework
+│   ├── README.md                   # 👈 Setup backend + endpoints
 │   ├── manage.py
 │   ├── requirements.txt
-│   ├── db.sqlite3
-│   ├── backDjango/                 # Settings, URLs, WSGI
+│   ├── backDjango/                 # Config Django (settings, URLs, WSGI)
 │   └── projects_app/               # App Django (models, views, serializers)
-├── trello_frontend/                # Vue.js app (Vite + Router + Tailwind)
-│   ├── README.md                   # 👈 Documentation frontend
+│       ├── models.py               # Project, Task, Column, Tag, User
+│       ├── views.py                # ViewSets + LoginView, RegisterView
+│       ├── serializers.py          # JSON serialization
+│       ├── urls.py                 # Routing avec DefaultRouter
+│       └── migrations/
+├── trello_frontend/                # Vue.js 3 app (Vite + Router + Tailwind)
+│   ├── README.md                   # 👈 Setup frontend + utilisation
 │   ├── package.json
 │   ├── vite.config.js
 │   ├── src/
-│   │   ├── pages/                  # Login, Dashboard, Kanban
-│   │   ├── components/             # Header, OverviewCards, Modales
+│   │   ├── pages/                  # Login.vue, Dashboard.vue, Kanban.vue
+│   │   ├── components/             # Header, Modals, OverviewCards
 │   │   ├── router/
 │   │   ├── App.vue
 │   │   ├── main.js
 │   │   └── style.css
 │   └── .npmrc                      # Sécurité npm (ignore-scripts)
 └── README.md                       # 👈 Ce fichier
+```
+
+## 🔐 État du projet (2026-08-14)
+
+### Backend ✅ 
+- ✅ Models Django (Project, Task, Column, Tag, User)
+- ✅ Serializers DRF avec nested relations (Tags in Tasks)
+- ✅ ViewSets CRUD (projects, tasks, columns) avec `IsAuthenticated`
+- ✅ **JWT Authentication** (HttpOnly cookies, SameSite=Lax, Secure)
+- ✅ Endpoints : `/api/auth/login/`, `/api/auth/register/`
+- ✅ CORS configuré (`CORS_ALLOW_CREDENTIALS = True`)
+- ✅ DB optimization avec `prefetch_related()`
+
+### Frontend 🔄
+- ✅ Routing (4 routes, lazy-loading)
+- ✅ Pages : Login, Dashboard (projets), Kanban (tâches par colonne)
+- ✅ Composants réutilisables (Header, Modals, OverviewCards)
+- ✅ Design Tailwind + responsive
+- ⏳ **Login → appel `/api/auth/login/` + cookie JWT**
+- ⏳ Dashboard → fetch projets avec `credentials: 'include'`
+- ⏳ Kanban → affiche colonnes dynamiques + tâches + tags
+
+### Prochaines étapes
+1. Frontend Login intégré à l'API
+2. Frontend Dashboard/Kanban intégré à l'API
+3. Drag-drop Kanban (avec tâches)
+4. Multi-user collaboratif (permissions)
+5. Tests unitaires + E2E
 ```
 
 ## 🚀 Quick Start
