@@ -3,7 +3,7 @@ from .views import ProjectViewSet, TaskViewSet, ColumnViewSet, RegisterView, Log
 from django.urls import path
 
 router = DefaultRouter()
-router.register(r'projects', ProjectViewSet)
+router.register(r'projects', ProjectViewSet, basename='projects')
 router.register(r'tasks', TaskViewSet, basename='tasks')
 router.register(r'columns', ColumnViewSet, basename='columns')
 

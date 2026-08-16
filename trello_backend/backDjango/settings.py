@@ -140,6 +140,13 @@ CORS_ALLOW_CREDENTIALS = True
 # 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'projects_app.authentication.CookieJWTAuthentication',
     ),
+}
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),  # 1 heure au lieu de 5 min
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # 7 jours au lieu de 1 jour
 }

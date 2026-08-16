@@ -50,7 +50,12 @@
     const columns = ref([]);
     const fetchColumns = async () => {
         try{
-            const response = await fetch('http://localhost:8000/api/columns/', { signal: controller.signal });
+            const response = await fetch('http://localhost:8000/api/columns/', { 
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                signal: controller.signal });
             if(!response.ok){
                 throw new Error('Erreur lors de la récupération des colonnes');
             }
@@ -65,7 +70,12 @@
     const project = ref({})
     const fetchProject = async () => {
         try{
-            const response = await fetch('http://localhost:8000/api/projects/' + projectId.value, { signal: controller.signal });
+            const response = await fetch('http://localhost:8000/api/projects/' + projectId.value + '/', { 
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                signal: controller.signal });
             if(!response.ok){
                 throw new Error('Erreur lors de la récupération du projet');
             }
@@ -80,7 +90,12 @@
     const tasks = ref([]);
     const fetchTasksByProjectId = async () => {
         try{
-            const response = await fetch(`http://localhost:8000/api/tasks/?project_id=${projectId.value}`, { signal: controller.signal });
+            const response = await fetch(`http://localhost:8000/api/tasks/?project_id=${projectId.value}`, { 
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                signal: controller.signal });
             if(!response.ok){
                 throw new Error('Erreur lors de la récupération des tâches');
             }

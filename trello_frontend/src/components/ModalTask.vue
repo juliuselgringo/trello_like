@@ -37,19 +37,37 @@
 <template>
     <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
         <div class="bg-white rounded-lg p-6 w-96">
-            <h2 class="text-xl font-bold mb-4">{{ modalTitle }}</h2>
+            <h2 class="text-xl text-gray-900 font-bold mb-4">
+                {{ modalTitle }}
+            </h2>
             <form @submit.prevent="handleSubmit">
                 <div class="mb-4">
-                    <label for="task_name" class="block text-gray-700">Nom de la tâche</label>
-                    <input v-model="formData.task_name" type="text" id="task_name" class="w-full border border-gray-300 rounded-md p-2" required />
+                    <label for="task_name" class="block text-gray-700">
+                        Nom de la tâche
+                    </label>
+                    <input 
+                    v-model="formData.task_name" 
+                    type="text" id="task_name" 
+                    class="w-full text-black border border-gray-300 rounded-md p-2" required 
+                    />
                 </div>
                 <div class="mb-4">
-                    <label for="task_description" class="block text-gray-700">Description</label>
-                    <textarea v-model="formData.task_description" id="task_description" class="w-full border border-gray-300 rounded-md p-2" required></textarea>
+                    <label for="task_description" class="block text-gray-700">
+                        Description
+                    </label>
+                    <textarea 
+                    v-model="formData.task_description" id="task_description" 
+                    class="w-full text-black border border-gray-300 rounded-md p-2" required></textarea>
                 </div>
                 <div class="mb-4">
-                    <label for="task_dead_line" class="block text-gray-700">Date limite</label>
-                    <input v-model="formData.task_dead_line" type="date" id="task_dead_line" class="w-full border border-gray-300 rounded-md p-2" required />
+                    <label for="task_dead_line" class="block text-gray-700">
+                        Date limite
+                    </label>
+                    <input 
+                    v-model="formData.task_dead_line" 
+                    type="date" id="task_dead_line" 
+                    class="w-full text-black border border-gray-300 rounded-md p-2" required 
+                    />
                 </div>
                 <button 
                 type="submit" 
@@ -57,7 +75,10 @@
                 >
                     {{ buttonLabel }}
                 </button>
-                <button id="cancel-button" @click="$emit('cancel')" type="button" class="ml-2 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                <button id="cancel-button" 
+                @click="$emit('cancel')" 
+                type="button" 
+                class="ml-2 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
                     Annuler
                 </button>
             </form>

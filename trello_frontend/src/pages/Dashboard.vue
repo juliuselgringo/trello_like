@@ -54,9 +54,15 @@
 
     const fetchProjects = async () => {
 
-
         try {
-            const response = await fetch('http://localhost:8000/api/projects/', { signal: controller.signal });
+            const response = await fetch('http://localhost:8000/api/projects/', { 
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                signal: controller.signal });
+
             if (!response.ok) {
                 throw new Error(`Erreur API: ${response.status}`);
             }
@@ -72,9 +78,14 @@
     const tasks = ref([]);
     const fetchTasks = async () => {
         
-
         try{
-            const response = await fetch('http://localhost:8000/api/tasks/', { signal: controller.signal });
+            const response = await fetch('http://localhost:8000/api/tasks/', { 
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                signal: controller.signal });
             if (!response.ok) {
                 throw new Error(`Erreur API: ${response.status}`);
             }

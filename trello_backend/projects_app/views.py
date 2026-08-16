@@ -1,3 +1,5 @@
+from django.conf import settings
+
 from django.shortcuts import render
 from django.template import response
 from rest_framework import viewsets
@@ -8,9 +10,9 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth.hashers import make_password
+
 
 class RegisterView(APIView):
     def post (self, request):
@@ -28,7 +30,6 @@ class RegisterView(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=400)
 
-# Create your views here.
 class LoginView(APIView):
     def post(self, request):
         user_name = request.data.get('user_name')
@@ -50,7 +51,7 @@ class LoginView(APIView):
             'access_token', 
             str(refresh.access_token), 
             httponly=True,
-            secure=True,
+            secure=not settings.DEBUG,
             samesite='Lax'
         )
         return response
