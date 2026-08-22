@@ -5,7 +5,9 @@ from django.template import response
 from rest_framework import viewsets
 from .models import Project, Task, Column, User
 from .serializers import ProjectSerializer, TaskSerializer, ColumnSerializer, UserSerializer
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -19,6 +21,11 @@ class RegisterView(APIView):
         user_name = request.data.get('user_name')
         user_email = request.data.get('user_email')
         user_password = request.data.get('user_password')
+
+        if User.objects.filter(user_name=user_name).exists():
+            return Response({'error': 'Username already exists'}, status=400)
+        if User.objects.filter(user_email=user_email).exists():
+            return Response({'error': 'Email already exists'}, status=400)
 
         try:
             user = User.objects.create(
@@ -61,6 +68,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
 
+    def perform_create(self, serializer):
+        serializer.save(user_id=self.request.user.user_id)  # Assuming user_id is the primary key of the User model
+
 class TaskViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = TaskSerializer
@@ -76,3 +86,13 @@ class ColumnViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     queryset = Column.objects.all()
     serializer_class = ColumnSerializer
+
+@method_decorator(csrf_exempt, name='dispatch')
+class LogoutView(APIView):
+    permission_classes = []
+    authentication_classes = []
+
+    def post(self, request):
+        response = Response({'message': 'Logout successful'})
+        response.delete_cookie('access_token')
+        return response

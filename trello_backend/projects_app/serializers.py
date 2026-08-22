@@ -4,7 +4,8 @@ from .models import Project, Task, Tagged, Tag, Column, User
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ['project_id', 'project_name', 'project_description', 'project_creation_date', 'user']
+        fields = ['project_id', 'project_name', 'project_description', 'project_creation_date', 'user'] 
+        read_only_fields = ['project_id', 'user']
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:

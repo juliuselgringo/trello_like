@@ -6,35 +6,48 @@ Ce projet est un support d'apprentissage pour progresser vers les frameworks.
 - Contrainte pedagogique: ne pas coder a la place de l'etudiante.
 - Materiel deja disponible: maquettes, modele Merise, base de donnees, projet Vue deja initialise dans `trello_frontend/`.
 
-## État du projet (2026-08-14)
+## État du projet (2026-08-22)
 
-### Frontend 🔄
+### Frontend ✅
 - ✅ Routing 4 routes (/, /login, /dashboard, /kanban) avec lazy-loading
 - ✅ Pages : Login.vue, Dashboard.vue (liste projets + modales), Kanban.vue (colonnes + modales)
 - ✅ Composants réutilisables : Header, OverviewCards, ModalProject, ModalTask, DeconnexionBtn
 - ✅ Design complet avec Tailwind CSS + variables CSS centralisées
 - ✅ Responsive avec Flex/Grid (colonnes wrap sur petit écran)
-- ⏳ Login.vue : intégrer `/api/auth/login/` (actuellement mock)
-- ⏳ Dashboard.vue + Kanban.vue : envoyer cookies dans fetch (credentials: 'include')
+- ✅ Login.vue : intégration `/api/auth/login/` + redirection vers dashboard
+- ✅ Dashboard.vue + Kanban.vue : fetch avec `credentials: 'include'` + trailing slash `/api/projects/{id}/`
+- ✅ Bouton Déconnexion : appel `/api/auth/logout/` + suppression cookie + redirection login
+- ✅ Intercepteur global (`fetchWithAuth`) : gère 401/403 → déconnexion automatique
 
-### Backend ✅ Complété (Phase 1)
+### Backend ✅ (Phase 1 Complétée)
 - ✅ Models Django (Project, Task, Column, Tag, User — fields incluent user_name)
-- ✅ Serializers DRF (ProjectSerializer, TaskSerializer avec nested Tags)
+- ✅ Serializers DRF (ProjectSerializer avec `read_only_fields`, TaskSerializer avec nested Tags)
 - ✅ ViewSets (ProjectViewSet, TaskViewSet avec IsAuthenticated permission)
 - ✅ Endpoints GET/POST/PUT/DELETE /api/projects/ et /api/tasks/
 - ✅ **Authentification JWT** :
-  - LoginView (POST /api/auth/login/) → JWT HttpOnly cookie
-  - RegisterView (POST /api/auth/register/) → crée user avec password hashé
+  - LoginView (POST /api/auth/login/) → JWT HttpOnly cookie (1 min)
+  - RegisterView (POST /api/auth/register/) → crée user avec password hashé + validation unique
+  - LogoutView (POST /api/auth/logout/) → supprime cookie (authentification_classes=[], permission_classes=[])
   - Protection : tous endpoints nécessitent IsAuthenticated
-- ✅ CORS configuré (CORS_ALLOW_CREDENTIALS = True)
+- ✅ CORS configuré (CORS_ALLOW_CREDENTIALS = True, trailing slash URLs)
 - ✅ DB optimization (prefetch_related pour nested tags)
+- ✅ Création de projets : optimistic update + assign automatique user via `perform_create()`
+- ✅ Validation user_name unique et user_email unique au modèle
 
-### Prochaines étapes
-1. **Frontend Login API** : fetch /api/auth/login/ + redirection
-2. **Frontend API Integration** : ajouter `credentials: 'include'` dans Dashboard/Kanban
-3. **Multi-user** : permissions pour collaborateurs sur un projet
-4. **Drag-drop Kanban** : déplacer tâches entre colonnes
-5. **Tests** : unit + E2E (bonus)
+### Bugs Résolus (2026-08-22)
+1. ❌→✅ CORS 301 redirection : ajouter trailing slash (`/api/projects/{id}/`)
+2. ❌→✅ Token JWT invalide au login : hashage password via `make_password()` + vérification via `check_password()`
+3. ❌→✅ Création projet 400 Bad Request : rendre `user` read-only dans serializer + `perform_create()`
+4. ❌→✅ Dashboard projet non affiché après création : vérifier sync `projectsFiltered` ou utiliser `computed`
+5. ❌→✅ Logout impossible après expiration token : vider `authentication_classes` et `permission_classes` sur LogoutView
+
+### Prochaines étapes (Phase 2)
+1. **Refresh Token** : implémenter rotation automatique du token avant expiration
+2. **Multi-user Permissions** : permettre collaborateurs sur un projet (FK user_id)
+3. **Drag-drop Kanban** : déplacer tâches entre colonnes (column_id UPDATE)
+4. **Recherche & Filtres** : filtrer projets/tâches par statut, priority, assignee
+5. **Tests** : unit tests Django + E2E Vue
+6. **Notifications** : websocket pour mises à jour temps réel
 
 # Style d'accompagnement attendu
 

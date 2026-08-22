@@ -38,15 +38,18 @@
             <form @submit.prevent="handleSubmit">
                 <div class="mb-4">
                     <label for="project_name" class="block text-gray-700">Nom du projet</label>
-                    <input v-model="formData.project_name" type="text" id="project_name" class="w-full border border-gray-300 rounded-md p-2" required />
+                    <input v-model="formData.project_name" type="text" id="project_name" 
+                    class="w-full text-black border border-gray-300 rounded-md p-2" required />
                 </div>
                 <div class="mb-4">
                     <label for="project_description" class="block text-gray-700">Description</label>
-                    <textarea v-model="formData.project_description" id="project_description" class="w-full border border-gray-300 rounded-md p-2" required></textarea>
+                    <textarea v-model="formData.project_description" id="project_description" 
+                    class="w-full text-black border border-gray-300 rounded-md p-2" required></textarea>
                 </div>
                 <div class="mb-4">
                     <label for="project_creation_date" class="block text-gray-700">Date de création</label>
-                    <input v-model="formData.project_creation_date" type="date" id="project_creation_date" class="w-full border border-gray-300 rounded-md p-2" required />
+                    <input v-model="formData.project_creation_date" type="date" id="project_creation_date" 
+                    class="w-full text-black border border-gray-300 rounded-md p-2" required />
                 </div>
                 <button 
                 type="submit" 

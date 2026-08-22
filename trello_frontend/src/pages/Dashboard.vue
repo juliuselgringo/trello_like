@@ -27,17 +27,47 @@
         showModalProject.value = false;
     };
 
-    const handleProjectCreate = (newProject) => {
-    projects.value.push(newProject);
-    closeModal();
+    const handleProjectCreate = async (newProject) => {
+        projects.value.push(newProject);
+        projectsFiltered.value.push(newProject);
+        closeModal();
+
+        try{
+            const response = await fetch('http://localhost:8000/api/projects/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify(newProject),
+            });
+
+            if (!response.ok) {
+                throw new Error(`Erreur API: ${response.status}`);
+            }
+
+            const createdProject = await response.json();
+            // remplacer le projet temporaire par celui créé par l'API
+            // on recherche l'index du projet temporaire dans la liste des projets
+            const index = projects.value.findIndex(p => p === newProject);
+            // si on le trouve, on le remplace par le projet créé par l'API
+            if (index !== -1) {
+                projects.value[index] = createdProject;
+            }
+
+        } catch (error) {
+            console.error('Erreur lors de la création du projet:', error);
+            projects.value.pop(); // retirer le projet temporaire de la liste
+            alert('Erreur lors de la création du projet. Veuillez réessayer.');
+        }
     };
 
     const handleProjectUpdate = (updatedProject) => {
-    const index = projects.value.findIndex(p => p.project_id === updatedProject.project_id);
-    if (index !== -1) {
-        projects.value[index] = updatedProject;
-    }
-    closeModal();
+        const index = projects.value.findIndex(p => p.project_id === updatedProject.project_id);
+        if (index !== -1) {
+            projects.value[index] = updatedProject;
+        }
+        closeModal();
     };
 
     // data pour l'overview cards (il faudra les récupérer depuis l'api)
@@ -142,12 +172,19 @@
     };
     
     const getProjectColor = (project_id) => {
-        const projectColor = colors.value[project_id > colors.value.length ? (project_id - colors.value.length - 1) : (project_id - 1)];
+        const projectColor = colors.value[project_id-1];
+        const moduloIndex = project_id % colors.value.length;
+        if(project_id > colors.value.length){
+            if(moduloIndex === 0) {
+                return colors.value[colors.value.length - 1];
+            }
+            return colors.value[moduloIndex - 1];
+        }
         return projectColor;
     };
 
     const getProjectProgressColor = (project_id) => {
-        const projectProgressColor = progressColors.value[project_id > progressColors.value.length ? (project_id - progressColors.value.length - 1) : (project_id - 1)];
+        const projectProgressColor = 0;
         return projectProgressColor;
     };
 
