@@ -96,3 +96,14 @@ class LogoutView(APIView):
         response = Response({'message': 'Logout successful'})
         response.delete_cookie('access_token')
         return response
+
+class CurrentUserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        return Response({
+            'user_id': user.user_id,
+            'user_name': user.user_name,
+            'user_email': user.user_email
+        })

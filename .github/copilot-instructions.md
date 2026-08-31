@@ -25,10 +25,10 @@ Ce projet est un support d'apprentissage pour progresser vers les frameworks.
 - ✅ ViewSets (ProjectViewSet, TaskViewSet avec IsAuthenticated permission)
 - ✅ Endpoints GET/POST/PUT/DELETE /api/projects/ et /api/tasks/
 - ✅ **Authentification JWT** :
-  - LoginView (POST /api/auth/login/) → JWT HttpOnly cookie (1 min)
-  - RegisterView (POST /api/auth/register/) → crée user avec password hashé + validation unique
-  - LogoutView (POST /api/auth/logout/) → supprime cookie (authentification_classes=[], permission_classes=[])
-  - Protection : tous endpoints nécessitent IsAuthenticated
+- ✅ LoginView (POST /api/auth/login/) → JWT HttpOnly cookie (1 min)
+- ✅ RegisterView (POST /api/auth/register/) → crée user avec password hashé + validation unique
+- ✅ LogoutView (POST /api/auth/logout/) → supprime cookie (authentification_classes=[], permission_classes=[])
+- ✅ Protection : tous endpoints nécessitent IsAuthenticated
 - ✅ CORS configuré (CORS_ALLOW_CREDENTIALS = True, trailing slash URLs)
 - ✅ DB optimization (prefetch_related pour nested tags)
 - ✅ Création de projets : optimistic update + assign automatique user via `perform_create()`

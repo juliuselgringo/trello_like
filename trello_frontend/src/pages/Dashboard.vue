@@ -4,7 +4,7 @@
     import OverviewCards from '../components/OverviewCards.vue';
     import ModalProject from '../components/ModalProject.vue';
     
-    import { ref, onMounted, onUnmounted } from 'vue';
+    import { ref, onMounted, onUnmounted, computed } from 'vue';
 
     // modal project
     const showModalProject = ref(false);
@@ -62,20 +62,39 @@
         }
     };
 
-    const handleProjectUpdate = (updatedProject) => {
+    const handleProjectUpdate = async (updatedProject) => {
         const index = projects.value.findIndex(p => p.project_id === updatedProject.project_id);
         if (index !== -1) {
             projects.value[index] = updatedProject;
         }
         closeModal();
+
+        try{
+            const response = await fetch(`http://localhost:8000/api/projects/${updatedProject.project_id}/`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify(updatedProject),
+            });
+
+            if (!response.ok) {
+                throw new Error(`Erreur API: ${response.status}`);
+            }
+
+            const updatedProjectFromAPI = await response.json();
+            const index = projects.value.findIndex(p => p.project_id === updatedProjectFromAPI.project_id);
+            if (index !== -1) {
+                projects.value[index] = updatedProjectFromAPI;
+            }
+        } catch (error) {
+            console.error('Erreur lors de la mise à jour du projet:', error);
+            alert('Erreur lors de la mise à jour du projet. Veuillez réessayer.');
+        }
     };
 
-    // data pour l'overview cards (il faudra les récupérer depuis l'api)
-    const date = new Date();
-    const projectsActive = ref(5);
-    const tasksInProgress = ref(3);
-    const tasksCompletedThisMonth = ref(18);
-    const tasksOverdue = ref(2);
+    
 
     // Récupérer les projets depuis l'API
     const projects = ref([]);
@@ -125,13 +144,38 @@
             console.error('Erreur lors du fetch des tâches:', error);   
         }
     };
+
+    // récupérer l'utilisateur courant depuis l'API
+    const currentUser = ref(null);
+    const fetchCurrentUser = async () => {
+        try {
+            const response = await fetch('http://localhost:8000/api/user/me/', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                signal: controller.signal });
+
+            if (!response.ok) {
+                throw new Error(`Erreur API: ${response.status}`);
+            }
+            const data = await response.json();
+            currentUser.value = data;
+        } catch (error) {
+            console.error('Erreur lors du fetch de l\'utilisateur courant:', error);
+        }
+    };
     
 
+    // fonction appelée à l'affichage du composant
     onMounted(() => {
         fetchProjects();
         fetchTasks();
+        fetchCurrentUser();
     });
 
+    // fonction appelée à la destruction du composant
     onUnmounted(() => {
         controller.abort(); // Annule le fetch si on quitte
     });
@@ -150,27 +194,39 @@
         "bg-green-500",
         "bg-red-500",
         "bg-blue-500",
-    ]);
+    ]);  
 
-
-    
-
+    // récupérer les tâches d'un projet spécifique
     const getProjectTasks = (project_id) => {
         const found = tasks.value.filter(t => t.project === project_id);
         return found ? found.length : 0;
     };
 
+    // récupérer les tâches terminées d'un projet spécifique
     const getProjectTasksDone = (project_id) => {
         const found = tasks.value.filter(t => t.project === project_id && t.column === 3);
         return found ? found.length : 0;
     };
 
+    // récupérer les tâches à faire d'un projet spécifique
+    const getProjectTasksToDo = (project_id) => {
+        const found = tasks.value.filter(t => t.project === project_id && t.column === 1);
+        return found ? found.length : 0;
+    };
+
+    // récupérer les tâches en retard d'un projet spécifique
+    const getProjectTasksOverdue = (project_id) => {
+        const found = tasks.value.filter(t => t.project === project_id && t.column !== 3 && new Date(t.task_dead_line) < Date.now());
+        return found ? found.length : 0;
+    };
+
+    // récupérer le pourcentage de progression d'un projet spécifique
     const getProjectProgress = (project_id) => {
         const totalTasks = getProjectTasks(project_id);
         const completedTasks = getProjectTasksDone(project_id);
         return totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
     };
-    
+    // récupérer la couleur d'un projet spécifique
     const getProjectColor = (project_id) => {
         const projectColor = colors.value[project_id-1];
         const moduloIndex = project_id % colors.value.length;
@@ -183,15 +239,44 @@
         return projectColor;
     };
 
+    // récupérer la couleur de progression d'un projet spécifique
     const getProjectProgressColor = (project_id) => {
-        const projectProgressColor = 0;
+        const projectProgressColor = progressColors.value[project_id-1];
+        const moduloIndex = project_id % progressColors.value.length;
+        if(project_id > progressColors.value.length){
+            if(moduloIndex === 0) {
+                return progressColors.value[progressColors.value.length - 1];
+            }
+            return progressColors.value[moduloIndex - 1];
+        }
         return projectProgressColor;
     };
 
+    // filtrer les projets en fonction de la recherche
     const filterProjects = (event) => {
         const searchTerm = event.target.value.toLowerCase();
         projectsFiltered.value = projects.value.filter(project => project.project_name.toLowerCase().includes(searchTerm));
     };
+
+    // data pour l'overview cards (il faudra les récupérer depuis l'api)
+    // nombre de projets actifs
+    // nombre de tâches en cours
+    // nombre de tâches terminées
+    // nombre de tâches en retard
+    const date = new Date();
+    const projectsActive = computed(() => (projects.value.length));
+
+    const tasksInProgress = computed(() => {
+        return projects.value.reduce((total, project) => total + (getProjectTasks(project.project_id) - getProjectTasksDone(project.project_id) - getProjectTasksToDo(project.project_id)), 0);
+    });
+
+    const tasksCompleted = computed(() => (
+        projects.value.reduce((total, project) => total + getProjectTasksDone(project.project_id), 0)
+    ));
+
+    const tasksOverdue = computed(() => (
+        projects.value.reduce((total, project) => total + getProjectTasksOverdue(project.project_id), 0)
+    ));
 
 </script>
 
@@ -220,7 +305,7 @@
                     <p id="date">
                         {{ date.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}
                     </p>
-                    <h1 id="greeting" class="text-3xl font-bold">Bonjour, Julien &#128075;</h1>
+                    <h1 id="greeting" class="text-3xl font-bold">Bonjour, {{ currentUser?.user_name }} &#128075;</h1>
                     <p id="welcome-message">
                         Vous avez 
                         <span class="text-purple-500">{{ tasksInProgress }} tâches en cours</span>
@@ -240,7 +325,7 @@
             <div id="overview" class="flex flex-wrap gap-4 mt-10">
                 <OverviewCards label="Projet Actifs" :value="projectsActive"></OverviewCards>
                 <OverviewCards label="Tâches en cours" :value="tasksInProgress"></OverviewCards>
-                <OverviewCards label="Terminées ce mois" :value="tasksCompletedThisMonth"></OverviewCards>
+                <OverviewCards label="Tâches terminées" :value="tasksCompleted"></OverviewCards>
                 <OverviewCards label="En retard" :value="tasksOverdue"></OverviewCards>
             </div>
             <!-- MES PROJETS -->
