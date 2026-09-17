@@ -278,6 +278,33 @@
         projects.value.reduce((total, project) => total + getProjectTasksOverdue(project.project_id), 0)
     ));
 
+    // booléen pour afficher le bouton de suppression d'un projet
+    const showDeleteButton = ref(false);
+
+    // fonction pour supprimer un projet
+    const deleteProject = async (project) => {
+        try {
+            const response = await fetch(`http://localhost:8000/api/projects/${project.project_id}/`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                signal: controller.signal
+            });
+
+            if (!response.ok) {
+                throw new Error("Erreur lors de la suppression du projet");
+            } else {
+                alert("Projet supprimé avec succès");
+            }
+            // mettre à jour la liste des projets après la suppression en rechargeant la vue
+            window.location.reload();
+        } catch (error) {
+            console.error("Erreur lors de la suppression du projet :", error);
+        }
+    }
+
 </script>
 
 <template>
@@ -312,12 +339,17 @@
                          aujourd'hui.
                     </p>
                 </div>
-                <div class="col-span-1 flex justify-end">
+                <div id="new-project-col" class="col-span-1 flex justify-end">
                     <button 
                     class="bg-purple-500 hover:bg-purple-700 text-white rounded-md p-2"
                     @click="openAddProjectModal"
                     >
                         + Nouveau projet
+                    </button>
+                    <button
+                    class="ml-4 bg-red-500 hover:bg-red-700 text-white rounded-md p-2"
+                    @click="showDeleteButton = !showDeleteButton">
+                        - Supprimer projet
                     </button>
                 </div>
             </div>
@@ -369,6 +401,14 @@
                         @click="openEditProjectModal(project)"
                         >
                             Modifier
+                        </button>
+                        <button 
+                        v-if="showDeleteButton"
+                        id="delete-task" 
+                        class="mt-4 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded"
+                        @click="deleteProject(project)"
+                        >
+                            Supprimer
                         </button>
                     </div>
                 </div>
