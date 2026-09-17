@@ -54,6 +54,8 @@
             if (index !== -1) {
                 projects.value[index] = createdProject;
             }
+            // recharger la vue pour afficher le projet créé
+            window.location.reload();
 
         } catch (error) {
             console.error('Erreur lors de la création du projet:', error);

@@ -13,8 +13,8 @@
         task_name: props.task?.task_name || '',
         task_description: props.task?.task_description || '',
         task_dead_line: props.task?.task_dead_line || '',
-        column_id: props.task?.column_id || '1',
-        project_id: props.task?.project_id || props.project?.project_id,
+        column: '1',
+        project: props.project?.project_id,
     });
 
     const isEdit = computed(() => props.mode === 'edit');

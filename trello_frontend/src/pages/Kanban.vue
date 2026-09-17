@@ -30,9 +30,36 @@
         showModalTask.value = false;
     };
 
-    const handleTaskCreate = (newTask) => {
-    tasks.value.push(newTask);
-    closeModal();
+    const handleTaskCreate = async (newTask) => {
+        tasks.value.push(newTask);
+        closeModal();
+
+        try {
+            const response = await fetch('http://localhost:8000/api/tasks/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify(newTask),
+                signal: controller.signal
+            });
+            if (!response.ok) {
+                throw new Error('Erreur lors de la création de la tâche' + response.status);
+            }
+            const createdTask = await response.json();
+            // remplacer la tâche temporaire par la tâche créée depuis l'API
+            const index = tasks.value.findIndex(t => t === newTask);
+            if (index !== -1) {
+                tasks.value[index] = createdTask;
+            }
+            // recharger la vue pour afficher la tâche créée
+            window.location.reload();
+
+        } catch (error) {
+            console.error("Erreur lors de la création de la tâche :", error);
+            tasks.value.pop();
+        }
     };
 
     const handleTaskUpdate = (updatedTask) => {
