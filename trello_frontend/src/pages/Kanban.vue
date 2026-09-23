@@ -4,36 +4,19 @@
     import { ref, onMounted, onUnmounted, computed } from 'vue';
     import { useRoute } from 'vue-router';
     import ModalTask from '@/components/ModalTask.vue';
+    import KanbanArray from '@/components/KanbanArray.vue';
 
     //récupération de l'id du projet depuis l'URL
     const route = useRoute();
     const projectId = ref(route.query.project_id);
 
-    // booleen pour afficher le bouton de suppression des tâches
-    const showDeleteButton = ref(false);
+
     
     // controller pour annuler les fetch si l'utilisateur quitte la page
     const controller = new AbortController();
 
-    // fetch /api/columns
-    const columns = ref([]);
-    const fetchColumns = async () => {
-        try{
-            const response = await fetch('http://localhost:8000/api/columns/', { 
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'include',
-                signal: controller.signal });
-            if(!response.ok){
-                throw new Error('Erreur lors de la récupération des colonnes');
-            }
-            const data = await response.json();
-            columns.value = data;
-        } catch (error) {
-            console.error(error);
-        }
-    };    
+    // booleen pour afficher le bouton de suppression des tâches
+    const showDeleteButton = ref(false);
 
     // fetch /api/projects/id
     const project = ref({})
@@ -54,7 +37,7 @@
             console.error(error);
         }
     };
-    
+
     // fetch /api/tasks/project_id 
     const tasks = ref([]);
     const fetchTasksByProjectId = async () => {
@@ -79,18 +62,12 @@
     onMounted(() => {
         fetchProject();
         fetchTasksByProjectId();
-        fetchColumns();
     });
 
     // Annulation des fetch si l'utilisateur quitte la page
     onUnmounted(() => {
         controller.abort();
     });
-
-    // Fonction pour obtenir la classe CSS en fonction de la couleur du tag
-    const getClassForTag = (tag_color) => {
-        return `bg-${tag_color}-500`;
-    };
 
     // modal task
     const showModalTask = ref(false);
@@ -176,9 +153,9 @@
     };
 
     // fonction pour supprimer une tâche
-    const deleteTask = async (taskId) => {
+    const deleteTask = async (task) => {
         try {
-            const response = await fetch(`http://localhost:8000/api/tasks/${taskId}/`, {
+            const response = await fetch(`http://localhost:8000/api/tasks/${task.task_id}/`, {
                 method: 'DELETE',
                 credentials: 'include',
                 signal: controller.signal
@@ -188,7 +165,7 @@
             } else {
                 alert("Tâche supprimée avec succès");
             }
-            const index = tasks.value.findIndex(t => t.task_id === taskId);
+            const index = tasks.value.findIndex(t => t.task_id === task.task_id);
             if (index !== -1) {
                 tasks.value.splice(index, 1);
             }
@@ -233,50 +210,23 @@
                 </button>
             </div>
         </div>
-        <div class="mx-10 flex flex-wrap gap-4">
-            <div v-for="column in columns" 
-            :key="column.column_id" 
-            class="rounded-lg p-4 flex-1 min-w-[250px]"
-            style="background-color: var(--column-bg);"
-            >
-                <h2 class="text-xl font-bold mb-4">{{ column.column_name }}</h2>
-                <div v-for="task in tasks.filter(t => t.column === column.column_id)" 
-                    :key="task.task_id" 
-                    class="flex flex-col rounded-lg p-4 mb-4"
-                     style="background-color: var(--input-bg);">
-                    <h3 class="text-lg font-semibold mb-2">{{ task.task_name }}</h3>
-                    <p class="mb-2">{{ task.task_description }}</p>
-                    <div class="mt-auto flex flex-wrap gap-2">
-                        <span v-for="taggedItem in task.taggeds" :key="taggedItem.tag.tag_id" :class="[getClassForTag(taggedItem.tag.tag_color), 'text-white px-2 py-1 rounded-full text-sm']">{{ taggedItem.tag.tag_name }}</span>
-                    </div>
-                    <div id="deadline" 
-                    class="mt-auto text-gray-400 mt-2">
-                        Date limite : {{ task.task_dead_line }}
-                    </div>
-                    <button id="update-task" 
-                    @click="openEditTaskModal(task)" 
-                    class="mt-auto bg-purple-500 hover:bg-purple-700 text-white font-bold py-1 px-2 rounded">
-                        Modifier
-                    </button>
-                    <button v-if="showDeleteButton" 
-                    @click="deleteTask(task.task_id)" 
-                    class="mt-4 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
-                        Supprimer
-                    </button>
-                </div>
-            </div>
-
-        </div>
+        <KanbanArray 
+        :project_id="projectId"
+        :show_delete_button="showDeleteButton"
+        :tasks="tasks"
+        @edit_task="openEditTaskModal"
+        @delete_task="deleteTask"
+         />
 
 
         <ModalTask 
-            v-if="showModalTask" 
-            :mode="modalMode" 
-            :task="selectedTask" 
-            :project="project" 
-            @create="handleTaskCreate" 
-            @update="handleTaskUpdate" 
-            @cancel="showModalTask = false"
+        v-if="showModalTask" 
+        :mode="modalMode" 
+        :task="selectedTask" 
+        :project="project" 
+        @create="handleTaskCreate" 
+        @update="handleTaskUpdate" 
+        @cancel="showModalTask = false"
         />
     </main>
 </template>
