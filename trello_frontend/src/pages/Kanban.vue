@@ -8,68 +8,10 @@
     //récupération de l'id du projet depuis l'URL
     const route = useRoute();
     const projectId = ref(route.query.project_id);
+
+    // booleen pour afficher le bouton de suppression des tâches
+    const showDeleteButton = ref(false);
     
-    // modal task
-    const showModalTask = ref(false);
-    const modalMode = ref('add');
-    const selectedTask = ref(null);
-
-    const openAddTaskModal = () => {
-        modalMode.value = 'add';
-        selectedTask.value = null;
-        showModalTask.value = true;
-    };
-
-    const openEditTaskModal = (task) => {
-        modalMode.value = 'edit';
-        selectedTask.value = task;
-        showModalTask.value = true;
-    };
-
-    const closeModal = () => {
-        showModalTask.value = false;
-    };
-
-    const handleTaskCreate = async (newTask) => {
-        tasks.value.push(newTask);
-        closeModal();
-
-        try {
-            const response = await fetch('http://localhost:8000/api/tasks/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'include',
-                body: JSON.stringify(newTask),
-                signal: controller.signal
-            });
-            if (!response.ok) {
-                throw new Error('Erreur lors de la création de la tâche' + response.status);
-            }
-            const createdTask = await response.json();
-            // remplacer la tâche temporaire par la tâche créée depuis l'API
-            const index = tasks.value.findIndex(t => t === newTask);
-            if (index !== -1) {
-                tasks.value[index] = createdTask;
-            }
-            // recharger la vue pour afficher la tâche créée
-            window.location.reload();
-
-        } catch (error) {
-            console.error("Erreur lors de la création de la tâche :", error);
-            tasks.value.pop();
-        }
-    };
-
-    const handleTaskUpdate = (updatedTask) => {
-    const index = tasks.value.findIndex(t => t.task_id === updatedTask.task_id);
-    if (index !== -1) {
-        tasks.value[index] = updatedTask;
-    }
-    closeModal();
-    };
-
     // controller pour annuler les fetch si l'utilisateur quitte la page
     const controller = new AbortController();
 
@@ -150,6 +92,111 @@
         return `bg-${tag_color}-500`;
     };
 
+    // modal task
+    const showModalTask = ref(false);
+    const modalMode = ref('add');
+    const selectedTask = ref(null);
+
+    const openAddTaskModal = () => {
+        modalMode.value = 'add';
+        selectedTask.value = null;
+        showModalTask.value = true;
+    };
+
+    const openEditTaskModal = (task) => {
+        modalMode.value = 'edit';
+        selectedTask.value = task;
+        showModalTask.value = true;
+    };
+
+    const closeModal = () => {
+        showModalTask.value = false;
+    };
+
+    const handleTaskCreate = async (newTask) => {
+        tasks.value.push(newTask);
+        closeModal();
+
+        try {
+            const response = await fetch('http://localhost:8000/api/tasks/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify(newTask),
+                signal: controller.signal
+            });
+            if (!response.ok) {
+                throw new Error('Erreur lors de la création de la tâche' + response.status);
+            }
+            const createdTask = await response.json();
+            // remplacer la tâche temporaire par la tâche créée depuis l'API
+            const index = tasks.value.findIndex(t => t === newTask);
+            if (index !== -1) {
+                tasks.value[index] = createdTask;
+            }
+            // recharger la vue pour afficher la tâche créée
+            window.location.reload();
+
+        } catch (error) {
+            console.error("Erreur lors de la création de la tâche :", error);
+            tasks.value.pop();
+        }
+    };
+
+    const handleTaskUpdate = async (updatedTask) => {
+        const index = tasks.value.findIndex(t => t.task_id === updatedTask.task_id);
+        if (index !== -1) {
+            tasks.value[index] = updatedTask;
+        }
+        closeModal();
+        try {
+            const response = await fetch(`http://localhost:8000/api/tasks/${updatedTask.task_id}/`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify(updatedTask),
+                signal: controller.signal
+            });
+            if (!response.ok) {
+                throw new Error('Erreur lors de la mise à jour de la tâche' + response.status);
+            }
+            const updatedTaskFromApi = await response.json();
+            // mettre à jour la tâche avec les données renvoyées par l'API
+            const index = tasks.value.findIndex(t => t.task_id === updatedTaskFromApi.task_id);
+            if (index !== -1) {
+                tasks.value[index] = updatedTaskFromApi;
+            }
+        } catch (error) {
+            console.error("Erreur lors de la mise à jour de la tâche :", error);
+        }
+    };
+
+    // fonction pour supprimer une tâche
+    const deleteTask = async (taskId) => {
+        try {
+            const response = await fetch(`http://localhost:8000/api/tasks/${taskId}/`, {
+                method: 'DELETE',
+                credentials: 'include',
+                signal: controller.signal
+            });
+            if (!response.ok) {
+                throw new Error('Erreur lors de la suppression de la tâche' + response.status);
+            } else {
+                alert("Tâche supprimée avec succès");
+            }
+            const index = tasks.value.findIndex(t => t.task_id === taskId);
+            if (index !== -1) {
+                tasks.value.splice(index, 1);
+            }
+        } catch (error) {
+            console.error("Erreur lors de la suppression de la tâche :", error);
+        }
+    };
+
 </script>
 
 <template>
@@ -175,7 +222,15 @@
                 <p class="mb-2">Date de création : {{ project.project_creation_date }}</p>
             </div>
             <div id="project-actions" class="col-span-1 flex items-center justify-end min-w-[45%]">
-                <button id="add-task" @click="openAddTaskModal" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">+ Ajouter une tâche</button>
+                <button id="add-task" @click="openAddTaskModal" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
+                    + Ajouter une tâche
+                </button>
+                <button 
+                id="delete-task" 
+                @click="showDeleteButton = !showDeleteButton" 
+                class="ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                    - Supprimer une tâche
+                </button>
             </div>
         </div>
         <div class="mx-10 flex flex-wrap gap-4">
@@ -200,7 +255,14 @@
                     </div>
                     <button id="update-task" 
                     @click="openEditTaskModal(task)" 
-                    class="mt-auto bg-purple-500 hover:bg-purple-700 text-white font-bold py-1 px-2 rounded">Modifier</button>
+                    class="mt-auto bg-purple-500 hover:bg-purple-700 text-white font-bold py-1 px-2 rounded">
+                        Modifier
+                    </button>
+                    <button v-if="showDeleteButton" 
+                    @click="deleteTask(task.task_id)" 
+                    class="mt-4 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
+                        Supprimer
+                    </button>
                 </div>
             </div>
 
