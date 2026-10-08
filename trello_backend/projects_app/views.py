@@ -37,6 +37,7 @@ class RegisterView(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=400)
 
+@method_decorator(csrf_exempt, name='dispatch')
 class LoginView(APIView):
     def post(self, request):
         user_name = request.data.get('user_name')
