@@ -174,6 +174,34 @@
         }
     };
 
+    // fonction pour gérer le déplacement des tâches entre les colonnes
+    const handleTaskMoved = async ({taskId, newColumnId}) => {
+        console.log('Tâche déplacée', taskId, newColumnId);
+
+        const updatedTask = tasks.value.find(t => t.task_id === taskId);
+        if (updatedTask) {
+            updatedTask.column = newColumnId;
+        
+
+            try{
+                const response = await fetch(`http://localhost:8000/api/tasks/${taskId}/`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    signal: controller.signal,
+                    body: JSON.stringify(updatedTask)
+                });
+                if (!response.ok) {
+                    throw new Error('Erreur lors de la mise à jour de la tâche' + response.status);
+                }
+            } catch (error) {
+                console.error("Erreur lors de la mise à jour de la tâche :", error);
+            }
+        }
+    };
+
 </script>
 
 <template>
@@ -216,6 +244,7 @@
         :tasks="tasks"
         @edit_task="openEditTaskModal"
         @delete_task="deleteTask"
+        @task_moved="handleTaskMoved"
          />
 
 

@@ -30,6 +30,7 @@
         showModalProject.value = false;
     };
 
+    // gérer la création d'un projet
     const handleProjectCreate = async (newProject) => {
         projects.value.push(newProject);
         projectsFiltered.value.push(newProject);
@@ -67,6 +68,7 @@
         }
     };
 
+    // gérer la mise à jour d'un projet
     const handleProjectUpdate = async (updatedProject) => {
         const index = projects.value.findIndex(p => p.project_id === updatedProject.project_id);
         if (index !== -1) {
