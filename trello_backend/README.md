@@ -1,94 +1,147 @@
 # Trello-like Backend
 
-API REST avec Django et Django REST Framework pour la gestion de projets et tâches.
+API Django + DRF qui sert le front Vue.js pour la gestion des projets, colonnes et tâches.
 
-## 🚀 Setup
+## État actuel
 
-### Prérequis
+Le backend est fonctionnel pour la phase 1 du projet :
+- authentification JWT via cookie HttpOnly
+- inscription / connexion / déconnexion
+- CRUD des projets
+- CRUD des tâches
+- lecture des colonnes
+- protection des routes par `IsAuthenticated`
+- gestion des utilisateurs avec modèle personnalisé
+
+La phase 2 est en cours : refresh token avancé, permissions multi-users, drag & drop Kanban persisté, filtres et notifications.
+
+## Stack
+
 - Python 3.10+
-- PostgreSQL 14+ (base `trellodb`)
-- pip, venv
+- Django 6
+- Django REST Framework
+- djangorestframework-simplejwt
+- django-cors-headers
+- SQLite pour le dev local / PostgreSQL compatible en prod
 
-### Installation
+## Structure du projet
+
+```text
+trello_backend/
+├── backDjango/
+│   ├── settings.py
+│   ├── urls.py
+│   ├── asgi.py
+│   └── wsgi.py
+├── projects_app/
+│   ├── admin.py
+│   ├── apps.py
+│   ├── authentication.py
+│   ├── models.py
+│   ├── serializers.py
+│   ├── tests.py
+│   ├── urls.py
+│   ├── views.py
+│   └── migrations/
+├── manage.py
+├── requirements.txt
+├── db.sqlite3
+└── README.md
+```
+
+## Prérequis
+
+- Python 3.10+
+- pip
+- virtualenv ou venv
+
+## Installation
 
 ```bash
 cd trello_backend
-
-# Créer et activer l'environnement virtuel
 python -m venv venv
-source venv/Scripts/activate  # Windows: venv\Scripts\activate
+source venv/Scripts/activate   # Windows PowerShell
+# ou : venv\Scripts\activate
 
-# Installer les dépendances
 pip install -r requirements.txt
-
-# Migrations (données déjà en place)
 python manage.py migrate
-
-# Vérifier la config
 python manage.py check
 ```
 
-### Démarrage dev
+## Lancer le serveur
 
 ```bash
 python manage.py runserver
 ```
 
-Server : `http://127.0.0.1:8000`  
-Browsable API : `http://127.0.0.1:8000/api/`
+Le backend est alors accessible sur :
+- http://127.0.0.1:8000
+- http://127.0.0.1:8000/api/
 
-## 📁 Structure
+## Variables d’environnement
 
-```
-backDjango/               # Projet Django (settings, URLs, WSGI)
-│   ├── settings.py       # Config (INSTALLED_APPS, DB, etc.)
-│   ├── urls.py           # URLs principales
-│   ├── asgi.py
-│   └── wsgi.py
-│
-projects_app/             # App Django (métier)
-│   ├── models.py         # Project, Task, Column, Tag, User (auto-générés)
-│   ├── serializers.py    # ProjectSerializer, TaskSerializer (JSON ↔ Model)
-│   ├── views.py          # ProjectViewSet, TaskViewSet (CRUD)
-│   ├── urls.py           # Routing DRF avec DefaultRouter
-│   ├── admin.py
-│   ├── apps.py
-│   ├── tests.py
-│   ├── migrations/
-│   └── __init__.py
-│
-manage.py                 # CLI Django
-requirements.txt          # Dépendances
-db.sqlite3               # BD local (dev)
+Le projet lit des variables depuis un `.env` ou l’environnement système :
+
+```env
+SECRET_KEY=...
+DEBUG=True
+DB_NAME=trello_like
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_HOST=localhost
+DB_PORT=5432
 ```
 
-## � Authentification & Sécurité
+Le projet est compatible avec SQLite pour le développement local, mais la configuration actuelle est orientée PostgreSQL dans `settings.py`.
 
-### JWT HttpOnly Cookies
+## Modèle métier
 
-L'API utilise **JWT tokens stockés dans des cookies HttpOnly** :
+Les modèles principaux sont :
+- `User` : utilisateur personnalisé avec `user_name` et `user_email` uniques
+- `Project` : projet lié à un utilisateur
+- `Column` : colonne Kanban (`column_id`, `column_name`)
+- `Task` : tâche avec `task_name`, `task_description`, `task_dead_line`, `column`, `project`
+- `Tag` / `Tagged` : tags associés aux tâches
 
-- 🔒 **HttpOnly** : le token n'est pas accessible à JavaScript (protection XSS)
-- 🔒 **Secure** : le token est envoyé uniquement en HTTPS
-- 🔒 **SameSite=Lax** : protection CSRF
+Les règles de validation actuelles :
+- `user_name` unique
+- `user_email` unique
+- `project` et `task` sont associés au projet courant
+- `task.column` est la clé qui permet de déplacer la tâche dans une autre colonne
 
-### Configuration requise
+## Authentification
 
-Dans `backDjango/settings.py` :
-```python
-INSTALLED_APPS = [
-    ...
-    'rest_framework_simplejwt',
-]
+Le backend utilise des JWT stockés dans des cookies HttpOnly.
 
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = ['http://localhost:5173']
+### Points clés
+
+- le token est envoyé dans le cookie `access_token`
+- le navigateur l’envoie automatiquement si `credentials: 'include'` est utilisé côté front
+- l’authentification est gérée par `CookieJWTAuthentication`
+- chaque route API protectrice exige `IsAuthenticated`
+
+### Login
+
+Route : `POST /api/auth/login/`
+
+Exemple :
+
+```bash
+curl -X POST http://localhost:8000/api/auth/login/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_name": "alice",
+    "user_password": "secret123"
+  }'
 ```
 
-### Login / Registrat
+Réponse :
+- cookie `access_token` reçu automatiquement par le navigateur
+- body JSON de confirmation
 
-**POST** `/api/auth/register/`  
-Créer un utilisateur.
+### Register
+
+Route : `POST /api/auth/register/`
 
 ```bash
 curl -X POST http://localhost:8000/api/auth/register/ \
@@ -96,168 +149,129 @@ curl -X POST http://localhost:8000/api/auth/register/ \
   -d '{
     "user_name": "alice",
     "user_email": "alice@example.com",
-    "user_password": "securepass123"
+    "user_password": "secret123"
   }'
 ```
 
-Response: `{"message": "User registered successfully"}` (201)
+### Logout
 
----
+Route : `POST /api/auth/logout/`
 
-**POST** `/api/auth/login/`  
-Se connecter et recevoir un JWT cookie.
+Le cookie est supprimé côté backend.
+
+### Utilisateur courant
+
+Route : `GET /api/user/me/`
+
+Retourne les infos de l’utilisateur connecté.
+
+## API actuelle
+
+### Auth
+
+- `POST /api/auth/register/`
+- `POST /api/auth/login/`
+- `POST /api/auth/logout/`
+- `GET /api/user/me/`
+
+### Projets
+
+- `GET /api/projects/`
+- `GET /api/projects/{id}/`
+- `POST /api/projects/`
+- `PUT /api/projects/{id}/`
+- `PATCH /api/projects/{id}/`
+- `DELETE /api/projects/{id}/`
+
+Exemple de création :
 
 ```bash
-curl -X POST http://localhost:8000/api/auth/login/ \
+curl -X POST http://localhost:8000/api/projects/ \
   -H "Content-Type: application/json" \
-  -d '{"user_name": "alice", "user_password": "securepass123"}' \
-  -v  # Pour voir le Set-Cookie header
-```
-
-Response (200) + `Set-Cookie: access_token=....; HttpOnly; Secure; SameSite=Lax`
-
----
-
-### Endpoints protégés
-
-**Tous les endpoints API nécessitent l'authentification** via le cookie JWT.
-
-Le frontend envoie automatiquement le cookie si `credentials: 'include'` est configuré.
-
-**Note** : Le cookie est envoyé automatiquement par le navigateur — pas besoin de l'ajouter manuellement aux headers.
-
----
-
-## �🔌 Endpoints implémentés
-
-### Projects
-
-**GET** `/api/projects/`  
-Lister tous les projets.
-
-```bash
-curl http://127.0.0.1:8000/api/projects/ -s | python -m json.tool
-```
-
-Response:
-```json
-[
-  {
-    "project_id": 1,
-    "project_name": "Roadmap Q3",
-    "project_description": "Planif Q3 2026",
-    "project_creation_date": "2026-07-15",
+  -d '{
+    "project_name": "Nouveau projet",
+    "project_description": "Description",
+    "project_creation_date": "2026-08-22",
     "user": 1
-  },
-  ...
+  }'
+```
+
+### Tâches
+
+- `GET /api/tasks/`
+- `GET /api/tasks/?project_id={id}`
+- `GET /api/tasks/{id}/`
+- `POST /api/tasks/`
+- `PUT /api/tasks/{id}/`
+- `PATCH /api/tasks/{id}/`
+- `DELETE /api/tasks/{id}/`
+
+Exemple de récupération des tâches d’un projet :
+
+```bash
+curl "http://localhost:8000/api/tasks/?project_id=1"
+```
+
+### Colonnes
+
+- `GET /api/columns/`
+- `GET /api/columns/{id}/`
+
+## CORS et frontend
+
+La configuration actuelle autorise le frontend Vue sur :
+
+```python
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:5173',
 ]
+CORS_ALLOW_CREDENTIALS = True
 ```
 
----
+Important : pour que le navigateur envoie les cookies, le frontend doit utiliser :
 
-**GET** `/api/projects/{id}/`  
-Récupérer un projet.
-
-```bash
-curl http://127.0.0.1:8000/api/projects/1/ -s | python -m json.tool
+```js
+fetch(url, {
+  credentials: 'include'
+})
 ```
 
----
+## Points de vigilance
 
-**POST** `/api/projects/`  
-Créer un projet.
+- Les URLs de l’API utilisent bien les trailing slashes côté frontend (`/api/projects/{id}/`, `/api/tasks/{id}/`).
+- Les points d’entrée de l’API ne doivent pas être appelés sans `credentials: 'include'`.
+- Les modèles utilisent une clé métier personnalisée (`task_id`, `project_id`, etc.) qui est renvoyée côté front.
 
-```bash
-curl.exe -X POST http://127.0.0.1:8000/api/projects/ \
-  -H "Content-Type: application/json" \
-  -d '{"project_name": "Mon projet", "project_description": "Test", "project_creation_date": "2026-08-11", "user": 1}' \
-  -s | python -m json.tool
+## Prochaines étapes
+
+1. Refresh token avec rotation automatique
+2. Permissions multi-user / collaborateurs
+3. Drag & drop Kanban persisté en base
+4. Filtres de recherche et statuts
+5. Tests Django
+6. Notifications temps réel
+
+## Bonnes pratiques d’utilisation
+
+- Toujours passer par le frontend pour authentifier les requêtes
+- Vérifier les réponses HTTP avant de modifier l’état local
+- respecter la convention des trailing slashes
+- utiliser les objets JSON renvoyés par l’API pour mettre à jour l’état Vue
+
+## Référence rapide
+
+```text
+POST /api/auth/register/
+POST /api/auth/login/
+POST /api/auth/logout/
+GET  /api/user/me/
+GET  /api/projects/
+POST /api/projects/
+GET  /api/tasks/?project_id={id}
+POST /api/tasks/
+GET  /api/columns/
 ```
 
----
-
-**PUT** `/api/projects/{id}/`  
-Remplacer complètement un projet.
-
-```bash
-curl.exe -X PUT http://127.0.0.1:8000/api/projects/1/ \
-  -H "Content-Type: application/json" \
-  -d '{"project_name": "Nouveau nom", "project_description": "Desc", "project_creation_date": "2026-08-11", "user": 1}' \
-  -s | python -m json.tool
-```
-
----
-
-**PATCH** `/api/projects/{id}/`  
-Modifier partiellement un projet.
-
-```bash
-curl.exe -X PATCH http://127.0.0.1:8000/api/projects/1/ \
-  -H "Content-Type: application/json" \
-  -d '{"project_name": "Nouveau nom"}' \
-  -s
-```
-
----
-
-**DELETE** `/api/projects/{id}/`  
-Supprimer un projet.
-
-```bash
-curl.exe -X DELETE http://127.0.0.1:8000/api/projects/1/ -s
-```
-
----
-
-### Tasks
-
-**GET** `/api/tasks/`  
-Lister toutes les tâches.
-
-```bash
-curl http://127.0.0.1:8000/api/tasks/ -s | python -m json.tool
-```
-
----
-
-**POST** `/api/tasks/`  
-Créer une tâche.
-
-```bash
-curl.exe -X POST http://127.0.0.1:8000/api/tasks/ \
-  -H "Content-Type: application/json" \
-  -d '{"task_name": "Ma tâche", "task_description": "Faire un truc", "task_dead_line": "2026-08-15", "column": 1, "project": 1}' \
-  -s | python -m json.tool
-```
-
----
-
-## 🏗️ Architecture DRF
-
-Pattern établi : **Serializer → ViewSet → Router**
-
-1. **Serializer** (`serializers.py`) : transforme modèles Django ↔ JSON
-   ```python
-   class ProjectSerializer(serializers.ModelSerializer):
-       class Meta:
-           model = Project
-           fields = ['project_id', 'project_name', ...]
-   ```
-
-2. **ViewSet** (`views.py`) : logique métier, génère automatiquement CRUD
-   ```python
-   class ProjectViewSet(viewsets.ModelViewSet):
-       queryset = Project.objects.all()
-       serializer_class = ProjectSerializer
-   ```
-
-3. **Router** (`urls.py`) : génère URLs automatiquement
-   ```python
-   router.register(r'projects', ProjectViewSet)
-   ```
-
-**Endpoints auto-générés par ModelViewSet** :
-| Méthode | URL | Action |
 |---------|-----|--------|
 | GET | /api/projects/ | Lister |
 | POST | /api/projects/ | Créer |

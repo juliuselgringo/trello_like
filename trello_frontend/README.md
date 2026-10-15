@@ -1,223 +1,259 @@
 # Trello-like Frontend
 
-Application Vue.js 3 pour la gestion de projets et tâches en style Kanban.
+Application Vue 3 pour la gestion de projets, tâches et colonnes Kanban.
 
-## 🚀 Setup
+## État actuel
 
-### Prérequis
-- Node.js 18+ 
-- npm 9+
+Le frontend est fonctionnel pour la majeure partie de la phase 1 :
+- page de connexion et inscription
+- dashboard avec liste des projets
+- page Kanban avec colonnes et tâches
+- modal de création / édition de projet et de tâche
+- déconnexion avec suppression du cookie JWT
+- intégration des appels API avec `credentials: 'include'`
+- gestion simple des erreurs API et redirection de session
 
-### Installation
+Le drag & drop entre colonnes est en cours d’implémentation et est déjà branché sur les événements du composant draggable, mais la persistance côté backend reste à finaliser selon le flux métier de la tâche.
+
+## Stack
+
+- Vue 3
+- Vite
+- Vue Router 4
+- Tailwind CSS
+- JavaScript ES modules
+
+## Structure du projet
+
+```text
+trello_frontend/
+├── index.html
+├── package.json
+├── vite.config.js
+├── src/
+│   ├── App.vue
+│   ├── main.js
+│   ├── style.css
+│   ├── components/
+│   │   ├── DeconnexionBtn.vue
+│   │   ├── Header.vue
+│   │   ├── KanbanArray.vue
+│   │   ├── ModalProject.vue
+│   │   ├── ModalSignIn.vue
+│   │   ├── ModalTask.vue
+│   │   ├── OverviewCards.vue
+│   │   └── ProjectsArray.vue
+│   ├── composables/
+│   │   └── useProjectTasks.js
+│   ├── pages/
+│   │   ├── Dashboard.vue
+│   │   ├── Kanban.vue
+│   │   └── Login.vue
+│   └── router/
+│       └── index.js
+└── README.md
+```
+
+## Prérequis
+
+- Node.js 18+
+- npm
+- backend Django lancé sur http://localhost:8000
+
+## Installation
 
 ```bash
 cd trello_frontend
 npm install
 ```
 
-**⚠️ Sécurité npm** : Le fichier `.npmrc` contient `ignore-scripts=true` pour prévenir les attaques supply chain. Si un package essential manque après installation, voir [../.github/copilot-instructions.md](../.github/copilot-instructions.md#sécurité-npm-et-gestion-des-scripts).
-
-### Démarrage dev
+## Lancer le projet
 
 ```bash
 npm run dev
 ```
 
-Application accessible à `http://localhost:5173`
+L’application est disponible sur :
+- http://localhost:5173
 
-## 📁 Structure
+## Sécurité npm
 
-```
-src/
-  ├── App.vue              # Root component avec RouterView
-  ├── main.js              # Initialisation Vue + router
-  ├── style.css            # Styles globaux, variables CSS, Tailwind
-  ├── router/
-  │   └── index.js         # Configuration routes (vue-router 4)
-  ├── pages/               # Composants pages (lazy-loaded)
-  │   ├── Login.vue        # Page authentification
-  │   ├── Dashboard.vue    # Liste projets + modal ajout/edit
-  │   └── Kanban.vue       # Suivi tâches + modal ajout/edit
-  ├── components/          # Composants réutilisables
-  │   ├── Header.vue       # Logo + titre
-  │   ├── OverviewCards.vue # Stats cards
-  │   ├── ModalProject.vue # Modal add/edit projet
-  │   ├── ModalTask.vue    # Modal add/edit tâche
-  │   └── DeconnexionBtn.vue # Bouton logout
-  └── public/              # Assets statiques
+Le projet contient un `.npmrc` avec `ignore-scripts=true` pour limiter les risques de scripts malveillants exécutés pendant l’installation des dépendances.
+
+Si une dépendance nécessite un script d’installation spécifique, il faut faire une exception explicite et documenter la raison.
+
+## Routes de l’application
+
+```text
+/            -> redirection vers /login
+/login       -> Login.vue
+/dashboard   -> Dashboard.vue
+/kanban      -> Kanban.vue
 ```
 
-## 🔐 Authentification JWT
+La configuration se trouve dans :
 
-### Configuration CORS
+```js
+src/router/index.js
+```
 
-Le backend envoie les JWT en **HttpOnly cookies**. Pour que le navigateur les envoie automatiquement :
+## Authentification
 
-**Tous les fetch doivent inclure** :
-```javascript
-fetch('http://localhost:8000/api/projects/', {
-  credentials: 'include'  // 👈 IMPORTANT ! Envoie le cookie JWT
+Le frontend utilise le cookie HttpOnly `access_token` envoyé par le backend Django.
+
+### Règle clé
+
+Les appels HTTP doivent utiliser :
+
+```js
+fetch(url, {
+  credentials: 'include',
+  headers: {
+    'Content-Type': 'application/json',
+  },
 })
 ```
 
-### Workflow
+Cela permet au navigateur d’envoyer le cookie sur les requêtes protégées.
 
-1. **Login** → `POST /api/auth/login/`
-   - Envoie : `{user_name, user_password}`
-   - Reçoit : cookie `access_token` (HttpOnly)
-   - Redirige vers `/dashboard`
+### Workflow actuel
 
-2. **Requêtes API** → `GET /api/projects/`
-   - Navigateur envoie le cookie automatiquement
-   - Backend valide le JWT
-   - Retourne les données
+1. L’utilisateur soumet le formulaire de connexion
+2. `POST /api/auth/login/`
+3. le backend renvoie le cookie JWT
+4. le navigateur se redirige vers `/dashboard`
+5. les écrans fetchent ensuite les projets / tâches avec `credentials: include`
 
-3. **Logout** → supprimer le cookie et rediriger vers `/login`
+## API utilisée par le frontend
 
----
+### Authentification
 
-## 🔌 Endpoints API utilisés
+- `POST /api/auth/register/`
+- `POST /api/auth/login/`
+- `POST /api/auth/logout/`
+- `GET /api/user/me/`
 
-- **POST** `/api/auth/login/` → Authentification
-- **POST** `/api/auth/register/` → Créer un compte
-- **GET** `/api/projects/` → Lister projets (protégé)
-- **GET** `/api/tasks/?project_id=X` → Lister tâches (protégé)
-- **GET** `/api/columns/` → Lister colonnes (protégé)
-- **POST/PUT/DELETE** → CRUD (protégé)
+### Projets
 
----
+- `GET /api/projects/`
+- `GET /api/projects/{id}/`
+- `POST /api/projects/`
+- `PUT /api/projects/{id}/`
+- `DELETE /api/projects/{id}/`
 
-## 🎨 Design System
+### Tâches
 
-### Couleurs (CSS Variables)
+- `GET /api/tasks/?project_id={id}`
+- `GET /api/tasks/{id}/`
+- `POST /api/tasks/`
+- `PUT /api/tasks/{id}/`
+- `DELETE /api/tasks/{id}/`
 
-Définies dans `src/style.css`:
-```css
---gradient-main: linear-gradient(135deg, #a855f7 10%, #000000 50%)
---input-bg: rgb(48, 46, 46)
---text-primary: #ffffff
---accent-purple: #a855f7
+### Colonnes
+
+- `GET /api/columns/`
+
+## Fonctionnalités implémentées
+
+### Login
+
+- formulaire utilisateur / mot de passe
+- appel vers `/api/auth/login/`
+- redirection vers `/dashboard`
+
+### Dashboard
+
+- affichage des projets
+- création et modification de projet
+- recherche dans la liste des projets
+- vues de synthèse via `OverviewCards`
+
+### Kanban
+
+- affichage des colonnes et des tâches
+- ouverture de modal pour créer / modifier une tâche
+- suppression de tâche
+- drag & drop entre colonnes : en cours d’implémentation côté logique métier
+
+### Déconnexion
+
+- bouton `DeconnexionBtn`
+- appel vers `/api/auth/logout/`
+- suppression du cookie navigateur
+- redirection vers `/login`
+
+## Composants principaux
+
+### `Header.vue`
+Bandeau réutilisable sur les écrans principaux.
+
+### `OverviewCards.vue`
+Cartes de synthèse (projets, tâches, retards, etc.).
+
+### `ModalProject.vue`
+Modal de création / édition d’un projet.
+
+### `ModalTask.vue`
+Modal de création / édition d’une tâche.
+
+### `KanbanArray.vue`
+Conteneur des colonnes Kanban et logique d’affichage des cartes.
+
+## Design / style
+
+Le style global est centralisé dans `src/style.css` avec :
+- variables CSS pour les couleurs
+- fond principal
+- thèmes de composants
+- palette de tags et de colonnes
+
+La page est pensée pour rester lisible sur desktop tout en gardant un comportement responsive.
+
+## Bonnes pratiques du front
+
+- Utiliser `credentials: 'include'` sur tous les appels sécurisés
+- Vérifier le `response.ok` avant d’utiliser les données
+- Gérer les erreurs de manière explicite dans le `catch`
+- Respecter les URLs API avec trailing slash
+- Ne pas utiliser de `column_id` depuis le front si le backend attend `column`
+
+## Prochaines étapes
+
+1. Finaliser le drag & drop entre colonnes avec mise à jour de `task.column`
+2. Faire le `PUT` sur `/api/tasks/{id}/` après chaque drop
+3. Gérer le rollback visuel si l’API échoue
+4. Ajouter filtres / recherche avancée
+5. Ajouter refresh token + gestion d’expiration plus robuste
+6. Ajouter tests E2E sur les flux login / dashboard / kanban
+
+## Points pédagogiques
+
+Ce projet est un support d’apprentissage pour comprendre :
+- architecture Django + Vue
+- relation front/back via API
+- authentification cookie JWT
+- composants Vue et state local
+- navigation entre pages via `vue-router`
+- logique Kanban et drag & drop
+
+## Référence rapide
+
+```text
+/login
+/dashboard
+/kanban
 ```
 
-### Palette Tags
-
-5 couleurs cycliques pour badges projets :
-- `text-purple-500`, `text-yellow-500`, `text-green-500`, `text-red-500`, `text-blue-500`
-
-## 🛣️ Routes
-
-| Route | Component | Statut |
-|-------|-----------|--------|
-| `/` | → `/login` (redirect) | ✅ Impl. |
-| `/login` | Login.vue | ✅ Impl. (mock) |
-| `/dashboard` | Dashboard.vue | ✅ Impl. (mock data) |
-| `/kanban` | Kanban.vue | ✅ Impl. (mock data) |
-
-Chaque route utilise **lazy-loading** :
-```javascript
-() => import('../pages/PageName.vue')
+```text
+POST /api/auth/login/
+POST /api/auth/register/
+POST /api/auth/logout/
+GET  /api/projects/
+GET  /api/tasks/?project_id={id}
+GET  /api/columns/
+PUT  /api/tasks/{id}/
 ```
 
-## 🧩 Composants clés
-
-### Header.vue
-Logo + "Taskflow" title. Réutilisé dans Login, Dashboard, Kanban.
-
-**Props** : aucune
-
-```vue
-<Header />
-```
-
-### OverviewCards.vue
-Affiche une stat avec label + valeur, couleur dynamique.
-
-**Props** :
-- `label` (String) : "Projet Actifs", "Tâches en cours", etc.
-- `value` (String | Number) : valeur à afficher
-
-**Exemple** :
-```vue
-<OverviewCards label="Projet Actifs" :value="5" />
-```
-
-### ModalProject.vue (Upsert)
-Modal pour ajouter/modifier un projet. Mode déterminé par prop `mode`.
-
-**Props** :
-- `mode` (String) : `'add'` ou `'edit'`
-- `project` (Object) : optionnel, données pré-remplies si edit
-
-**Événements émis** :
-- `@create` : mode add, payload = `{ project_name, project_description, project_creation_date }`
-- `@update` : mode edit, payload = `{ project_id, project_name, ... }`
-- `@cancel` : fermeture sans action
-
-**Exemple** :
-```vue
-<ModalProject 
-  :mode="mode" 
-  :project="selectedProject" 
-  @create="handleCreate" 
-  @update="handleUpdate" 
-  @cancel="closeModal"
-/>
-```
-
-### ModalTask.vue (Upsert)
-Modal pour ajouter/modifier une tâche (sans choix colonne, drag-drop gère ça).
-
-**Props** :
-- `mode` (String) : `'add'` ou `'edit'`
-- `task` (Object) : optionnel
-- `project` (Object) : project courant (requis pour defaults)
-
-**Événements émis** :
-- `@create` : payload = `{ task_name, task_description, task_dead_line, column_id: 1, project_id }`
-- `@update` : payload = `{ task_id, task_name, ... }`
-- `@cancel`
-
-## 🔌 Intégration API (TODO)
-
-Actuellement : **mock data** en `ref()`. À remplacer par `fetch()` vers Django backend.
-
-### Endpoints attendus
-
-```
-GET    /api/projects/                  # Lister projets
-POST   /api/projects/                  # Créer projet
-PUT    /api/projects/{id}/             # Modifier projet
-DELETE /api/projects/{id}/             # Supprimer projet
-
-GET    /api/projects/{id}/tasks/       # Lister tâches projet
-POST   /api/projects/{id}/tasks/       # Créer tâche
-PUT    /api/tasks/{id}/                # Modifier tâche (colonne, etc.)
-DELETE /api/tasks/{id}/                # Supprimer tâche
-```
-
-## 🛠️ Technologies
-
-- **Vue.js 3** (Composition API, `<script setup>`)
-- **Vue Router 4** (lazy-loading, client-side routing)
-- **Tailwind CSS 4.3.3** (@tailwindcss/vite plugin)
-- **Vite** (build tool, dev server)
-- **npm** (package manager, sécurisé avec ignore-scripts)
-
-## 📝 Notes pédagogiques
-
-- **Pas de Pinia/state global** : mock data suffit pour le moment
-- **Pas de composants slots complexes** : préférer props simples
-- **Drag-drop** : implémenté plus tard avec events natifs ou lib externe
-- **Formulaires** : validation côté UI uniquement, backend fera validation stricte
-
-## 🚦 Checklist prochaines étapes
-
-- [ ] Configurer CORS Django
-- [ ] Implémenter login avec JWT/session
-- [ ] Connecter Dashboard → API projets
-- [ ] Connecter Kanban → API tâches
-- [ ] Implémenter drag-drop tâches (avec PUT /api/tasks/{id}/)
-- [ ] Styling responsif (mobile)
 - [ ] Tests (unit + e2e si temps)
 
 ## 📚 Références

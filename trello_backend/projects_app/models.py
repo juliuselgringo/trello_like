@@ -35,6 +35,10 @@ class Project(models.Model):
     project_creation_date = models.DateField()
     user = models.ForeignKey('User', models.DO_NOTHING)
 
+     # Ajoute cette méthode :
+    def __str__(self):
+        return self.project_name  # Affiche le nom du projet
+    
     class Meta:
         managed = False
         db_table = 'project'
